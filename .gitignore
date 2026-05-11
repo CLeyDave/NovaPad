@@ -6,3 +6,7 @@ obj/
 *.DotSettings
 packages/
 *.nupkg
+.vscode/
+*.zip
+NovaPad v0.9.5/
+*_wpftmp.*
