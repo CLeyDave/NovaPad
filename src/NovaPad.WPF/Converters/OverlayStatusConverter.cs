@@ -1,0 +1,18 @@
+using System.Globalization;
+using System.Windows.Data;
+using System.Windows.Media;
+
+namespace NovaPad.WPF.Converters;
+
+public class OverlayStatusConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is bool isVisible && isVisible)
+            return new SolidColorBrush(Color.FromRgb(0x4C, 0xAF, 0x50));
+        return new SolidColorBrush(Color.FromRgb(0x61, 0x61, 0x61));
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => throw new NotImplementedException();
+}

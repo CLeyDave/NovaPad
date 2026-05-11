@@ -1,0 +1,72 @@
+<UserControl x:Class="NovaPad.Overlay.Views.ExpandedPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Width="480" Height="Auto"
+             RenderTransformOrigin="0.5,0.5">
+    <Border x:Name="PanelBorder"
+            Background="#CC1A1A1A"
+            BorderBrush="#333333"
+            BorderThickness="1"
+            CornerRadius="16"
+            Padding="20"
+            Effect="{StaticResource CardShadow}">
+        <StackPanel>
+            <TextBlock Text="Panel de Control"
+                       FontSize="18" FontWeight="Bold"
+                       Foreground="White"
+                       Margin="0,0,0,16"/>
+
+            <ItemsControl x:Name="ControllerList">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="#22FFFFFF"
+                                CornerRadius="10"
+                                Padding="14,10"
+                                Margin="0,0,0,8">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Ellipse Grid.Column="0"
+                                         Width="10" Height="10"
+                                         Fill="{Binding StatusColor}"
+                                         VerticalAlignment="Center"
+                                         Margin="0,0,10,0"/>
+
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding Name}"
+                                           FontSize="14" FontWeight="SemiBold"
+                                           Foreground="White"
+                                           VerticalAlignment="Center"/>
+
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding BatteryText}"
+                                           FontSize="13" FontWeight="Bold"
+                                           Foreground="{Binding BatteryColor}"
+                                           VerticalAlignment="Center"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+                                           Text="{Binding Details}"
+                                           FontSize="11"
+                                           Foreground="#AAAAAA"
+                                           Margin="0,4,0,0"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock x:Name="SystemInfoText"
+                       FontSize="11"
+                       Foreground="#888888"
+                       Margin="0,8,0,0"/>
+        </StackPanel>
+    </Border>
+</UserControl>

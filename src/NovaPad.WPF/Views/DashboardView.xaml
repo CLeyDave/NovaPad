@@ -1,0 +1,185 @@
+<UserControl x:Class="NovaPad.WPF.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:NovaPad.WPF.ViewModels"
+             mc:Ignorable="d"
+             Background="{DynamicResource BackgroundBrush}"
+             d:DataContext="{d:DesignInstance vm:DashboardViewModel}">
+
+    <ScrollViewer Style="{StaticResource ModernScrollViewer}" Padding="24">
+        <StackPanel>
+            <!-- Header -->
+            <TextBlock Text="Panel" Style="{StaticResource SectionTitleStyle}"/>
+
+            <!-- Metrics Row -->
+            <ItemsControl ItemsSource="{Binding ControllerCards}" Margin="0,0,0,24">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="vm:DashboardControllerItem">
+                        <Border Style="{StaticResource ControllerCardStyle}" Width="300" Margin="0,0,16,16">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Connection Icon -->
+                                <Border Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"
+                                        Width="48" Height="48" CornerRadius="12"
+                                        Background="{DynamicResource SurfaceAltBrush}"
+                                        VerticalAlignment="Center" Margin="0,0,12,0">
+                                    <Path Data="{Binding ConnectionIcon}"
+                                          Stroke="{DynamicResource TextSecondaryBrush}"
+                                          StrokeThickness="1.8" Fill="Transparent"
+                                          Stretch="Uniform" Width="24" Height="24"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+
+                                <!-- Name and Type -->
+                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Name}"
+                                           FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Type}"
+                                           FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                                <!-- Battery -->
+                                <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                            Orientation="Horizontal" Margin="0,12,0,0">
+                                    <Path Data="{StaticResource BatteryChargingIcon}"
+                                          Stroke="{Binding BatteryLevel, Converter={StaticResource BatteryColor}}"
+                                          StrokeThickness="1.8" Fill="Transparent"
+                                          Stretch="Uniform" Width="16" Height="16"
+                                          VerticalAlignment="Center"/>
+                                    <ProgressBar Value="{Binding BatteryLevel}" Maximum="100"
+                                                 Height="4" Width="80" Margin="8,0,0,0"
+                                                 Foreground="{Binding BatteryLevel, Converter={StaticResource BatteryColor}}"
+                                                 Background="{DynamicResource SurfaceAltBrush}"
+                                                 BorderThickness="0"/>
+                                    <TextBlock Text="{Binding BatteryLevel, StringFormat={}{0}%}"
+                                               FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                                               Margin="8,0,0,0"/>
+                                </StackPanel>
+
+                                <!-- Latency + Status -->
+                                <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,6,0,0">
+                                    <Path Data="{StaticResource ClockIcon}"
+                                          Stroke="{DynamicResource TextDisabledBrush}"
+                                          StrokeThickness="1.8" Fill="Transparent"
+                                          Stretch="Uniform" Width="14" Height="14"
+                                          VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding Latency}" FontSize="11"
+                                               Foreground="{DynamicResource TextDisabledBrush}"
+                                               Margin="6,0,0,0"/>
+                                     <Ellipse Width="6" Height="6"
+                                              Fill="{Binding IsConnected, Converter={StaticResource OverlayStatusConverter}}"
+                                             Margin="12,3,0,0"/>
+                                </StackPanel>
+
+                                <!-- Connection + Polling -->
+                                <TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2"
+                                           Margin="0,8,0,0" FontSize="10"
+                                           Foreground="{DynamicResource TextDisabledBrush}">
+                                    <Run Text="{Binding ConnectionType}"/>
+                                    <Run Text=" · "/>
+                                    <Run Text="{Binding PollingRate}"/>
+                                    <Run Text=" · "/>
+                                    <Run Text="{Binding Manufacturer}"/>
+                                </TextBlock>
+
+                                <!-- Features -->
+                                <WrapPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2"
+                                           Margin="0,6,0,0">
+                                    <Border Background="{DynamicResource SurfaceAltBrush}"
+                                            CornerRadius="4" Padding="6,2" Margin="0,0,4,0"
+                                            Visibility="{Binding HasBattery, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="Batería" FontSize="10"
+                                                   Foreground="{DynamicResource TextDisabledBrush}"/>
+                                    </Border>
+                                    <Border Background="{DynamicResource SurfaceAltBrush}"
+                                            CornerRadius="4" Padding="6,2" Margin="0,0,4,0"
+                                            Visibility="{Binding HasTouchpad, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="Touchpad" FontSize="10"
+                                                   Foreground="{DynamicResource TextDisabledBrush}"/>
+                                    </Border>
+                                    <Border Background="{DynamicResource SurfaceAltBrush}"
+                                            CornerRadius="4" Padding="6,2" Margin="0,0,4,0"
+                                            Visibility="{Binding HasGyroscope, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="Giroscopio" FontSize="10"
+                                                   Foreground="{DynamicResource TextDisabledBrush}"/>
+                                    </Border>
+                                    <Border Background="{DynamicResource SurfaceAltBrush}"
+                                            CornerRadius="4" Padding="6,2"
+                                            Visibility="{Binding HasRumble, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="Vibración" FontSize="10"
+                                                   Foreground="{DynamicResource TextDisabledBrush}"/>
+                                    </Border>
+                                </WrapPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- Quick Stats Row -->
+            <TextBlock Text="Estado del Sistema" Style="{StaticResource SectionTitleStyle}"/>
+            <WrapPanel Orientation="Horizontal">
+                <Border Style="{StaticResource MetricCardStyle}" Margin="0,0,16,16">
+                    <StackPanel>
+                        <Path Data="{StaticResource SignalIcon}"
+                              Stroke="{StaticResource PrimaryBrush}"
+                              StrokeThickness="1.8" Fill="Transparent"
+                              Stretch="Uniform" Width="22" Height="22"/>
+                        <TextBlock Text="{Binding ConnectedControllers}" Style="{StaticResource ValueStyle}" Margin="0,8,0,0"/>
+                        <TextBlock Text="Conectados" Style="{StaticResource SubtitleStyle}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource MetricCardStyle}" Margin="0,0,16,16">
+                    <StackPanel>
+                        <Path Data="{StaticResource ClockIcon}"
+                              Stroke="{StaticResource SecondaryBrush}"
+                              StrokeThickness="1.8" Fill="Transparent"
+                              Stretch="Uniform" Width="22" Height="22"/>
+                        <TextBlock Text="{Binding AverageLatency}" Style="{StaticResource ValueStyle}" FontSize="22" Margin="0,8,0,0"/>
+                        <TextBlock Text="Latencia Prom" Style="{StaticResource SubtitleStyle}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource MetricCardStyle}" Margin="0,0,16,16">
+                    <StackPanel>
+                        <Path Data="{StaticResource BatteryChargingIcon}"
+                              Stroke="{Binding TotalBatteryAverage, Converter={StaticResource BatteryColor}}"
+                              StrokeThickness="1.8" Fill="Transparent"
+                              Stretch="Uniform" Width="22" Height="22"/>
+                        <TextBlock Text="{Binding TotalBatteryAverage, StringFormat={}{0}%}" Style="{StaticResource ValueStyle}" Margin="0,8,0,0"/>
+                        <TextBlock Text="Batería Prom" Style="{StaticResource SubtitleStyle}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource MetricCardStyle}" Margin="0,0,16,16">
+                    <StackPanel>
+                        <Path Data="{StaticResource TachometerIcon}"
+                              Stroke="{DynamicResource TextPrimaryBrush}"
+                              StrokeThickness="1.8" Fill="Transparent"
+                              Stretch="Uniform" Width="22" Height="22"/>
+                        <TextBlock Text="{Binding Uptime}" Style="{StaticResource ValueStyle}" FontSize="22" Margin="0,8,0,0"/>
+                        <TextBlock Text="Activo" Style="{StaticResource SubtitleStyle}"/>
+                    </StackPanel>
+                </Border>
+            </WrapPanel>
+
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

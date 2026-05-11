@@ -1,0 +1,14 @@
+<UserControl x:Class="NovaPad.Overlay.Widgets.ClockWidget"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Height="Auto">
+    <Border Background="Transparent"
+            CornerRadius="8"
+            Padding="8,4">
+        <TextBlock x:Name="ClockText"
+                   FontSize="14"
+                   FontWeight="SemiBold"
+                   Foreground="White"
+                   HorizontalAlignment="Center"/>
+    </Border>
+</UserControl>

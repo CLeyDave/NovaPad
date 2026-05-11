@@ -1,0 +1,39 @@
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaPad.Core", "NovaPad.Core\NovaPad.Core.csproj", "{68E7EC6F-85AC-44E3-AA75-2D5FDC03C079}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaPad.HID", "NovaPad.HID\NovaPad.HID.csproj", "{D857E05D-4438-4CF5-A19E-6E99FE248204}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaPad.WPF", "NovaPad.WPF\NovaPad.WPF.csproj", "{E6C2CBDC-6C19-45DC-8F85-227FA3C85462}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NovaPad.Overlay", "NovaPad.Overlay\NovaPad.Overlay.csproj", "{AB9E85E8-A383-4215-A980-F54E60BD9D83}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{68E7EC6F-85AC-44E3-AA75-2D5FDC03C079}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68E7EC6F-85AC-44E3-AA75-2D5FDC03C079}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68E7EC6F-85AC-44E3-AA75-2D5FDC03C079}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68E7EC6F-85AC-44E3-AA75-2D5FDC03C079}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D857E05D-4438-4CF5-A19E-6E99FE248204}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D857E05D-4438-4CF5-A19E-6E99FE248204}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D857E05D-4438-4CF5-A19E-6E99FE248204}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D857E05D-4438-4CF5-A19E-6E99FE248204}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6C2CBDC-6C19-45DC-8F85-227FA3C85462}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6C2CBDC-6C19-45DC-8F85-227FA3C85462}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6C2CBDC-6C19-45DC-8F85-227FA3C85462}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6C2CBDC-6C19-45DC-8F85-227FA3C85462}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB9E85E8-A383-4215-A980-F54E60BD9D83}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB9E85E8-A383-4215-A980-F54E60BD9D83}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB9E85E8-A383-4215-A980-F54E60BD9D83}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB9E85E8-A383-4215-A980-F54E60BD9D83}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,26 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:conv="clr-namespace:NovaPad.WPF.Converters">
+
+    <conv:BoolToVisibilityConverter x:Key="BoolToVis"/>
+    <conv:BoolToVisibilityConverter x:Key="BoolToVisInverted" IsInverted="True"/>
+    <conv:StringToVisibilityConverter x:Key="StringToVis"/>
+    <conv:BatteryLevelToColorConverter x:Key="BatteryColor"/>
+    <conv:ConnectionTypeToIconConverter x:Key="ConnectionIcon"/>
+    <conv:LogLevelToColorConverter x:Key="LogColor"/>
+    <conv:PercentageConverter x:Key="Percentage"/>
+    <conv:SidebarWidthConverter x:Key="SidebarWidthConverter"/>
+    <conv:OverlayStatusConverter x:Key="OverlayStatusConverter"/>
+    <conv:StickPosConverter x:Key="StickPosConverter"/>
+    <conv:ButtonActiveBgConverter x:Key="ButtonActiveBg"/>
+    <conv:ButtonActiveFgConverter x:Key="ButtonActiveFg"/>
+    <conv:BatteryPercentColorConverter x:Key="BatteryPercentColor"/>
+    <conv:MappingTypeConverter x:Key="MappingTypeConverter"/>
+    <conv:MappingVisibilityConverter x:Key="MappingVisibilityConverter"/>
+    <conv:ButtonTypeDisplayConverter x:Key="ButtonTypeDisplay"/>
+    <conv:ButtonTypeIconConverter x:Key="ButtonTypeIcon"/>
+    <conv:RatioToGridLengthConverter x:Key="RatioToFillConverter"/>
+    <conv:InverseRatioToGridLengthConverter x:Key="RatioToGapConverter"/>
+    <conv:HexToBrushConverter x:Key="HexToBrush"/>
+
+</ResourceDictionary>

@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>NovaPad.WPF</AssemblyName>
+    <RootNamespace>NovaPad.WPF</RootNamespace>
+    <SatelliteResourceLanguages>es</SatelliteResourceLanguages>
+    <ApplicationIcon>..\icon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="..\icon.ico">
+      <Link>icon.ico</Link>
+    </Resource>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3912.50" />
+    <PackageReference Include="ModernWpfUI" Version="0.9.6" />
+    <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.0-rc2" />
+    <PackageReference Include="Serilog" Version="4.2.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NovaPad.Core\NovaPad.Core.csproj" />
+    <ProjectReference Include="..\NovaPad.HID\NovaPad.HID.csproj" />
+  </ItemGroup>
+
+  <Target Name="CopyOverlay" AfterTargets="Build">
+    <Copy SourceFiles="..\NovaPad.Overlay\bin\$(Configuration)\net8.0-windows\NovaPad.Overlay.exe"
+          DestinationFolder="$(OutputPath)" />
+    <Copy SourceFiles="..\NovaPad.Overlay\bin\$(Configuration)\net8.0-windows\NovaPad.Overlay.dll"
+          DestinationFolder="$(OutputPath)" />
+    <Copy SourceFiles="..\NovaPad.Overlay\bin\$(Configuration)\net8.0-windows\NovaPad.Overlay.runtimeconfig.json"
+          DestinationFolder="$(OutputPath)" />
+    <Copy SourceFiles="..\NovaPad.Overlay\bin\$(Configuration)\net8.0-windows\NovaPad.Overlay.deps.json"
+          DestinationFolder="$(OutputPath)" />
+  </Target>
+</Project>
