@@ -103,11 +103,11 @@ public class UpdateService : INotifyPropertyChanged
         try
         {
             var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-            return version != null ? $"v{version.Major}.{version.Minor}.{version.Build}" : "v3.2.2";
+            return version != null ? $"v{version.Major}.{version.Minor}.{version.Build}" : "v3.2.3";
         }
         catch
         {
-            return "v3.2.2";
+            return "v3.2.3";
         }
     }
 
