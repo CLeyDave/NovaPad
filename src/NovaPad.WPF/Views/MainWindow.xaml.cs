@@ -251,7 +251,7 @@ public partial class MainWindow : Window
                 var overlay = App.GetService<IOverlayService>();
                 overlay.TogglePanel();
                 var overlayVm = App.GetService<AdminOverlayVm>();
-                overlayVm.UpdateRunningState(overlay.IsActive);
+                overlayVm.UpdateRunningState();
             }
             catch { }
             handled = true;
