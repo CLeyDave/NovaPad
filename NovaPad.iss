@@ -2,7 +2,7 @@
 ; Requires Inno Setup 6+
 
 #define MyAppName "NovaPad"
-#define MyAppVersion "3.2.4"
+#define MyAppVersion "3.2.5"
 #define MyAppPublisher "CLeyDave"
 #define MyAppURL "https://github.com/CLeyDave/NovaPad"
 #define MyAppExeName "NovaPad.WPF.exe"
@@ -48,6 +48,3 @@ Filename: "{app}\{#MyAppExeName}"; Description: "Ejecutar NovaPad"; Flags: posti
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{userappdata}\NovaPad"
-
-[UninstallRun]
-Filename: "{app}\NovaPad.WPF.exe"; Parameters: "--uninstall"; Flags: runhidden

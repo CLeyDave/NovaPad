@@ -246,7 +246,7 @@
                                 Padding="14,6" FontSize="13"/>
                         <Button Content="Descargar"
                                 Command="{Binding DownloadUpdateCommand}"
-                                IsEnabled="{Binding Updater.CanInstall}"
+                                IsEnabled="{Binding Updater.CanDownload}"
                                 Background="{StaticResource SecondaryBrush}"
                                 Foreground="White" BorderThickness="0"
                                 Padding="14,6" FontSize="13" Margin="8,0,0,0"/>

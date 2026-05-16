@@ -50,7 +50,7 @@ public class UpdateService : INotifyPropertyChanged
     public UpdateStatus Status
     {
         get => _status;
-        set { _status = value; OnPropertyChanged(); OnPropertyChanged(nameof(StatusText)); OnPropertyChanged(nameof(CanCheck)); OnPropertyChanged(nameof(CanInstall)); }
+        set { _status = value; OnPropertyChanged(); OnPropertyChanged(nameof(StatusText)); OnPropertyChanged(nameof(CanCheck)); OnPropertyChanged(nameof(CanDownload)); OnPropertyChanged(nameof(CanInstall)); }
     }
 
     private string _statusText = "";
@@ -89,6 +89,7 @@ public class UpdateService : INotifyPropertyChanged
     }
 
     public bool CanCheck => Status is UpdateStatus.Idle or UpdateStatus.UpToDate or UpdateStatus.Error or UpdateStatus.Available;
+    public bool CanDownload => Status == UpdateStatus.Available;
     public bool CanInstall => Status == UpdateStatus.ReadyToInstall;
 
     public UpdateService()
@@ -104,11 +105,11 @@ public class UpdateService : INotifyPropertyChanged
         try
         {
             var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-            return version != null ? $"v{version.Major}.{version.Minor}.{version.Build}" : "v3.2.4";
+            return version != null ? $"v{version.Major}.{version.Minor}.{version.Build}" : "v3.2.5";
         }
         catch
         {
-            return "v3.2.4";
+            return "v3.2.5";
         }
     }
 
