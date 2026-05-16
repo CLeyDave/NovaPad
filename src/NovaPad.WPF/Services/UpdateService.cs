@@ -94,6 +94,7 @@ public class UpdateService : INotifyPropertyChanged
     {
         _http = new HttpClient();
         _http.DefaultRequestHeaders.UserAgent.ParseAdd("NovaPad");
+        _http.Timeout = TimeSpan.FromSeconds(10);
         _currentVersion = GetCurrentVersion();
     }
 
@@ -102,11 +103,11 @@ public class UpdateService : INotifyPropertyChanged
         try
         {
             var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-            return version != null ? $"v{version.Major}.{version.Minor}.{version.Build}" : "v3.2.1";
+            return version != null ? $"v{version.Major}.{version.Minor}.{version.Build}" : "v3.2.2";
         }
         catch
         {
-            return "v3.2.1";
+            return "v3.2.2";
         }
     }
 

@@ -145,6 +145,7 @@ public class PanelExtendido
 
         foreach (var m in mandos)
         {
+            if (string.IsNullOrWhiteSpace(m.Nombre)) continue;
             var punto = new Border
             {
                 Width = 10,
