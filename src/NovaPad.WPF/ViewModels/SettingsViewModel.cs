@@ -30,13 +30,13 @@ public partial class SettingsViewModel : ObservableObject
     public string BuildDate { get; }
     public UpdateService Updater => _updater;
 
-    public SettingsViewModel(IAppSettingsService settings, IThemeService themeService, IOverlayService overlay)
+    public SettingsViewModel(IAppSettingsService settings, IThemeService themeService, IOverlayService overlay, UpdateService updater)
     {
         _settings = settings;
         _themeService = themeService;
         _overlay = overlay;
         _localization = LocalizationService.Instance;
-        _updater = new UpdateService();
+        _updater = updater;
 
         var version = Assembly.GetExecutingAssembly().GetName().Version;
         AppVersion = version != null ? $"v{version.Major}.{version.Minor}.{version.Build}" : "v1.0.0";

@@ -105,6 +105,7 @@ public partial class App
                     services.AddSingleton<INavigationService>(sp => sp.GetRequiredService<NavigationService>());
 
                     services.AddSingleton<IAppSettingsService, AppSettingsService>();
+                    services.AddSingleton<Services.UpdateService>();
 
                     services.AddSingleton<IThemeService, ThemeService>();
                     services.AddSingleton<INotificationService, NotificationService>();
@@ -163,7 +164,7 @@ public partial class App
             Log.Information("[{Elapsed}] Showing window...", sw.Elapsed);
             mainWindow.Show();
 
-            // Defer: scan, RGB restore, overlay
+            // Defer: scan, RGB restore, overlay, update check
             _ = Task.Run(async () =>
             {
                 try
@@ -202,9 +203,61 @@ public partial class App
                                 Log.Error(exOv, "[Background] Overlay auto-start failed");
                             }
                         }
+
                     });
-                }
-                catch (Exception ex)
+
+                        // Check for updates at startup (background, no dispatcher needed for HTTP)
+                        try
+                        {
+                            Log.Information("[Background] Checking for updates...");
+                            var updater = _host.Services.GetRequiredService<Services.UpdateService>();
+                            await updater.CheckForUpdatesAsync();
+
+                            if (updater.Status == Services.UpdateStatus.Available)
+                            {
+                                var tag = updater.LatestRelease?.TagName ?? "desconocida";
+                                Log.Information("[Background] Update available: {Tag}", tag);
+
+                                await Application.Current.Dispatcher.InvokeAsync(async () =>
+                                {
+                                    var dialog = new Views.UpdatePromptWindow(tag);
+                                    dialog.Owner = mainWindow;
+                                    dialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                                    var result = dialog.ShowDialog();
+
+                                    if (result == true)
+                                    {
+                                        switch (dialog.Choice)
+                                        {
+                                            case Views.UpdateChoice.DownloadInstall:
+                                                Log.Information("[Background] User chose download & install");
+                                                await updater.DownloadUpdateAsync();
+                                                if (updater.Status == Services.UpdateStatus.ReadyToInstall)
+                                                    updater.InstallUpdate();
+                                                break;
+                                            case Views.UpdateChoice.DownloadOnly:
+                                                Log.Information("[Background] User chose download only");
+                                                await updater.DownloadUpdateAsync();
+                                                break;
+                                        }
+                                    }
+                                });
+                            }
+                            else if (updater.Status == Services.UpdateStatus.UpToDate)
+                            {
+                                Log.Information("[Background] Already up to date ({Ver})", updater.CurrentVersion);
+                            }
+                            else if (updater.Status == Services.UpdateStatus.Error)
+                            {
+                                Log.Warning("[Background] Update check failed");
+                            }
+                        }
+                        catch (Exception exUpd)
+                        {
+                            Log.Error(exUpd, "[Background] Update check error");
+                        }
+                    }
+                    catch (Exception ex)
                 {
                     Log.Error(ex, "[Background] Error in deferred startup tasks");
                 }

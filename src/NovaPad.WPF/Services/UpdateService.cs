@@ -44,6 +44,7 @@ public class UpdateService : INotifyPropertyChanged
 
     private readonly HttpClient _http;
     private string _currentVersion;
+    public string CurrentVersion => _currentVersion;
 
     private UpdateStatus _status = UpdateStatus.Idle;
     public UpdateStatus Status
@@ -103,11 +104,11 @@ public class UpdateService : INotifyPropertyChanged
         try
         {
             var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-            return version != null ? $"v{version.Major}.{version.Minor}.{version.Build}" : "v3.2.3";
+            return version != null ? $"v{version.Major}.{version.Minor}.{version.Build}" : "v3.2.4";
         }
         catch
         {
-            return "v3.2.3";
+            return "v3.2.4";
         }
     }
 

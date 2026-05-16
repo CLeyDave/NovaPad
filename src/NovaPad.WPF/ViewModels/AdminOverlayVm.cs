@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NovaPad.Core.Events;
 using NovaPad.Core.Interfaces;
+using NovaPad.Core.Models;
 using NovaPad.WPF.Overlay;
 using NovaPad.WPF.Services;
 
@@ -124,7 +125,7 @@ public partial class AdminOverlayVm : ObservableObject
         var prevId = SelectedController?.Id;
         ControllerOptions.Clear();
         ControllerOptions.Add(new OptionMando("", "Global", true));
-        foreach (var c in _controllers.ConnectedControllers)
+        foreach (var c in _controllers.ConnectedControllers.Where(c => IsMandoVisible(c)))
             ControllerOptions.Add(new OptionMando(c.Id, $"{c.EffectiveName}", false));
 
         if (prevId != null && ControllerOptions.Any(o => o.Id == prevId))
@@ -434,6 +435,7 @@ public partial class AdminOverlayVm : ObservableObject
         try
         {
             var list = _controllers.ConnectedControllers
+                .Where(c => IsMandoVisible(c))
                 .Select(c =>
                 {
                     var state = _controllers.GetCurrentState(c.Id);
@@ -472,4 +474,10 @@ public partial class AdminOverlayVm : ObservableObject
         }
         catch { }
     }
+
+    private static bool IsMandoVisible(ControllerInfo c) =>
+        !c.IsEmulated
+        && !string.IsNullOrEmpty(c.EffectiveName)
+        && c.EffectiveName != "Unknown Controller"
+        && c.Type != Core.Enums.ControllerType.Unknown;
 }
