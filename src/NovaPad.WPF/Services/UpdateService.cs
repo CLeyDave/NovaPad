@@ -133,6 +133,8 @@ public class UpdateService : INotifyPropertyChanged
 
             LatestRelease = release;
 
+            StatusText = "";
+
             if (CompareVersions(release.TagName, _currentVersion) > 0)
             {
                 Status = UpdateStatus.Available;
