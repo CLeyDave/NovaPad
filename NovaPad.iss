@@ -44,7 +44,7 @@ Name: "{group}\Desinstalar NovaPad"; Filename: "{uninstallexe}"
 Name: "{userdesktop}\NovaPad"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "Ejecutar NovaPad"; Flags: postinstall nowait skipifsilent shellexec
+Filename: "{app}\{#MyAppExeName}"; Description: "Ejecutar NovaPad"; Flags: postinstall nowait shellexec
 
 [UninstallRun]
 Filename: "{app}\NovaPad.WPF.exe"; Parameters: "--uninstall"; Flags: runhidden
