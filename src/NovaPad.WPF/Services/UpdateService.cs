@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
@@ -39,7 +38,7 @@ public enum UpdateStatus
 
 public class UpdateService : INotifyPropertyChanged
 {
-    private const string Owner = "anomalyco";
+    private const string Owner = "CleyDave";
     private const string Repo = "NovaPad";
     private const string ApiUrl = $"https://api.github.com/repos/{Owner}/{Repo}/releases/latest";
 
@@ -103,11 +102,11 @@ public class UpdateService : INotifyPropertyChanged
         try
         {
             var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-            return version != null ? $"v{version.Major}.{version.Minor}.{version.Build}" : "v3.2.0";
+            return version != null ? $"v{version.Major}.{version.Minor}.{version.Build}" : "v3.2.1";
         }
         catch
         {
-            return "v3.2.0";
+            return "v3.2.1";
         }
     }
 
@@ -159,7 +158,7 @@ public class UpdateService : INotifyPropertyChanged
         }
 
         var asset = LatestRelease.Assets[0];
-        var downloadPath = Path.Combine(Path.GetTempPath(), "NovaPad_update.zip");
+        var downloadPath = Path.Combine(Path.GetTempPath(), "NovaPad_Setup.exe");
 
         Status = UpdateStatus.Downloading;
 
@@ -194,7 +193,7 @@ public class UpdateService : INotifyPropertyChanged
 
     public void InstallUpdate()
     {
-        var downloadPath = Path.Combine(Path.GetTempPath(), "NovaPad_update.zip");
+        var downloadPath = Path.Combine(Path.GetTempPath(), "NovaPad_Setup.exe");
         if (!File.Exists(downloadPath))
         {
             Status = UpdateStatus.Error;
@@ -204,39 +203,13 @@ public class UpdateService : INotifyPropertyChanged
 
         try
         {
-            var extractPath = Path.Combine(Path.GetTempPath(), "NovaPad_update");
-            if (Directory.Exists(extractPath)) Directory.Delete(extractPath, true);
-            ZipFile.ExtractToDirectory(downloadPath, extractPath);
-
-            var updaterPath = Path.Combine(extractPath, "NovaPad.Updater.exe");
-            var currentExe = Environment.ProcessPath;
-
-            if (File.Exists(updaterPath))
+            Process.Start(new ProcessStartInfo
             {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = updaterPath,
-                    Arguments = $"\"{currentExe}\" \"{extractPath}\"",
-                    UseShellExecute = true
-                });
-                Application.Current.Shutdown();
-            }
-            else
-            {
-                var setupExe = Directory.GetFiles(extractPath, "*.exe")
-                    .FirstOrDefault(f => f.Contains("setup", StringComparison.OrdinalIgnoreCase)
-                                      || f.Contains("install", StringComparison.OrdinalIgnoreCase));
-                if (setupExe != null)
-                {
-                    Process.Start(new ProcessStartInfo { FileName = setupExe, UseShellExecute = true });
-                    Application.Current.Shutdown();
-                }
-                else
-                {
-                    Status = UpdateStatus.Error;
-                    StatusText = "No se encontró un instalador en la actualización.";
-                }
-            }
+                FileName = downloadPath,
+                Arguments = "/VERYSILENT /SUPPRESSMSGBOXES",
+                UseShellExecute = true
+            });
+            Application.Current.Shutdown();
         }
         catch (Exception ex)
         {
