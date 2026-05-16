@@ -1,12 +1,21 @@
+# .NET build artifacts
 bin/
 obj/
-*.user
-*.suo
+
+# IDE files
 .vs/
-*.DotSettings
-packages/
-*.nupkg
-.vscode/
-*.zip
-NovaPad v0.9.5/
+*.suo
+*.user
+*.userprefs
+
+# Logs
+log/
+*.log
+
+# Published output
+NovaPad v3.1.3/
+
+# Temp files
 *_wpftmp.*
+*.tmp
+*.cache

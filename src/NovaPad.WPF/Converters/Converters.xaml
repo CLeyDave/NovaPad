@@ -10,17 +10,12 @@
     <conv:LogLevelToColorConverter x:Key="LogColor"/>
     <conv:PercentageConverter x:Key="Percentage"/>
     <conv:SidebarWidthConverter x:Key="SidebarWidthConverter"/>
-    <conv:OverlayStatusConverter x:Key="OverlayStatusConverter"/>
+    <conv:ConvertidorEstadoEnlace x:Key="OverlayStatus"/>
     <conv:StickPosConverter x:Key="StickPosConverter"/>
     <conv:ButtonActiveBgConverter x:Key="ButtonActiveBg"/>
     <conv:ButtonActiveFgConverter x:Key="ButtonActiveFg"/>
     <conv:BatteryPercentColorConverter x:Key="BatteryPercentColor"/>
-    <conv:MappingTypeConverter x:Key="MappingTypeConverter"/>
-    <conv:MappingVisibilityConverter x:Key="MappingVisibilityConverter"/>
-    <conv:ButtonTypeDisplayConverter x:Key="ButtonTypeDisplay"/>
-    <conv:ButtonTypeIconConverter x:Key="ButtonTypeIcon"/>
     <conv:RatioToGridLengthConverter x:Key="RatioToFillConverter"/>
     <conv:InverseRatioToGridLengthConverter x:Key="RatioToGapConverter"/>
-    <conv:HexToBrushConverter x:Key="HexToBrush"/>
 
 </ResourceDictionary>

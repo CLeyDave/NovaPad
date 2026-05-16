@@ -11,6 +11,7 @@ namespace NovaPad.WPF.ViewModels;
 public partial class DashboardViewModel : ObservableObject
 {
     private readonly IControllerManagerService _controllerManager;
+    private readonly INavigationService _navigation;
 
     [ObservableProperty]
     private int _connectedControllers;
@@ -31,9 +32,10 @@ public partial class DashboardViewModel : ObservableObject
 
     private readonly DateTime _startTime = DateTime.Now;
 
-    public DashboardViewModel(IControllerManagerService controllerManager)
+    public DashboardViewModel(IControllerManagerService controllerManager, INavigationService navigation)
     {
         _controllerManager = controllerManager;
+        _navigation = navigation;
         _controllerManager.ControllerUpdated += OnControllerChanged;
         _controllerManager.ControllerConnected += OnControllerChanged;
         _controllerManager.ControllerDisconnected += OnControllerChanged;
@@ -42,7 +44,7 @@ public partial class DashboardViewModel : ObservableObject
 
     private void OnControllerChanged(object? sender, ControllerInfo e)
     {
-        RefreshData();
+        App.Current?.Dispatcher.Invoke(RefreshData);
     }
 
     private void RefreshData()
@@ -93,6 +95,14 @@ public partial class DashboardViewModel : ObservableObject
                 IsConnected = ctrl.IsConnected
             });
         }
+    }
+
+    [RelayCommand]
+    private void NavigateToDetail(DashboardControllerItem? item)
+    {
+        if (item == null) return;
+        ControllerDetailViewModel.PendingControllerId = item.Id;
+        _navigation.NavigateTo("ControllerDetailView");
     }
 }
 

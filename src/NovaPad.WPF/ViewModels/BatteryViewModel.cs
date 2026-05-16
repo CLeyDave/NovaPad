@@ -26,8 +26,13 @@ public partial class BatteryViewModel : ObservableObject
         Refresh();
     }
 
-    private void OnControllersChanged(object? sender, ControllerInfo e) => Refresh();
-    private void OnInputReceived(object? sender, ControllerState state) => Refresh();
+    private void OnControllersChanged(object? sender, ControllerInfo e) => DispatchRefresh();
+    private void OnInputReceived(object? sender, ControllerState state) => DispatchRefresh();
+
+    private void DispatchRefresh()
+    {
+        App.Current?.Dispatcher.Invoke(Refresh);
+    }
 
     private void Refresh()
     {

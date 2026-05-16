@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:NovaPad.WPF.ViewModels"
+             xmlns:services="clr-namespace:NovaPad.WPF.Services"
              mc:Ignorable="d"
              Background="{DynamicResource BackgroundBrush}"
              d:DataContext="{d:DesignInstance vm:SettingsViewModel}">
@@ -18,14 +19,16 @@
                           Fill="Transparent" Stretch="Uniform" Width="20" Height="20"
                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
-                <TextBlock Text="CONFIGURACIÓN" Style="{StaticResource SectionTitleStyle}"
+                <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Settings_Title]}"
+                           Style="{StaticResource SectionTitleStyle}"
                            VerticalAlignment="Center" Margin="12,0,0,0"/>
             </StackPanel>
 
             <!-- GENERAL -->
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
                 <StackPanel>
-                    <TextBlock Text="GENERAL" FontSize="11"
+                    <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Settings_General]}"
+                               FontSize="11"
                                Foreground="{DynamicResource TextDisabledBrush}"
                                Margin="0,0,0,12"/>
                     <Grid Margin="0,0,0,8">
@@ -34,14 +37,16 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                            <TextBlock Text="Iniciar con Windows" FontSize="13"
+                            <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Settings_StartWithWindows]}"
+                                       FontSize="13"
                                        Foreground="{DynamicResource TextPrimaryBrush}"/>
-                            <TextBlock Text="Abrir NovaPad al iniciar sesión" FontSize="11"
+                            <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Settings_StartWithWindowsDesc]}"
+                                       FontSize="11"
                                        Foreground="{DynamicResource TextSecondaryBrush}"
                                        Margin="0,2,0,0"/>
                         </StackPanel>
-                        <CheckBox Grid.Column="1" IsChecked="{Binding StartWithWindows}"
-                                  VerticalAlignment="Center"/>
+                        <ToggleButton Grid.Column="1" IsChecked="{Binding StartWithWindows}"
+                                      Style="{StaticResource ModernToggleSwitch}" VerticalAlignment="Center"/>
                     </Grid>
                     <Rectangle Height="1" Fill="{DynamicResource BorderBrush}" Margin="0,8,0,8"/>
                     <Grid Margin="0,0,0,8">
@@ -50,14 +55,16 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                            <TextBlock Text="Minimizar a bandeja" FontSize="13"
+                            <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Settings_MinimizeToTray]}"
+                                       FontSize="13"
                                        Foreground="{DynamicResource TextPrimaryBrush}"/>
-                            <TextBlock Text="Minimizar al cerrar ventana" FontSize="11"
+                            <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Settings_MinimizeToTrayDesc]}"
+                                       FontSize="11"
                                        Foreground="{DynamicResource TextSecondaryBrush}"
                                        Margin="0,2,0,0"/>
                         </StackPanel>
-                        <CheckBox Grid.Column="1" IsChecked="{Binding MinimizeToTray}"
-                                  VerticalAlignment="Center"/>
+                        <ToggleButton Grid.Column="1" IsChecked="{Binding MinimizeToTray}"
+                                      Style="{StaticResource ModernToggleSwitch}" VerticalAlignment="Center"/>
                     </Grid>
                 </StackPanel>
             </Border>
@@ -65,7 +72,8 @@
             <!-- APARIENCIA -->
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
                 <StackPanel>
-                    <TextBlock Text="APARIENCIA" FontSize="11"
+                    <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Settings_Appearance]}"
+                               FontSize="11"
                                Foreground="{DynamicResource TextDisabledBrush}"
                                Margin="0,0,0,12"/>
                     <Grid Margin="0,0,0,12">
@@ -77,7 +85,8 @@
                             <ColumnDefinition Width="120"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Tema"
+                        <TextBlock Grid.Row="0" Grid.Column="0"
+                                   Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Settings_Theme]}"
                                    FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}"
                                    VerticalAlignment="Center"/>
                         <ComboBox Grid.Row="0" Grid.Column="1"
@@ -85,23 +94,24 @@
                                   Style="{StaticResource ModernComboBoxStyle}"
                                   MinWidth="160" HorizontalAlignment="Left">
                             <ComboBox.ItemsSource>
-                                <x:Array Type="sys:String" xmlns:sys="clr-namespace:System;assembly=mscorlib">
+                                <x:Array Type="sys:String" xmlns:sys="clr-namespace:System;assembly=System.Runtime">
                                     <sys:String>Oscuro</sys:String>
                                     <sys:String>Claro</sys:String>
                                 </x:Array>
                             </ComboBox.ItemsSource>
                         </ComboBox>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Idioma"
+                        <TextBlock Grid.Row="1" Grid.Column="0"
+                                   Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Settings_Language]}"
                                    FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}"
                                    VerticalAlignment="Center" Margin="0,8,0,0"/>
                         <ComboBox Grid.Row="1" Grid.Column="1"
                                   SelectedItem="{Binding Language, Mode=TwoWay}"
-                                  IsEnabled="False"
                                   Style="{StaticResource ModernComboBoxStyle}"
                                   MinWidth="160" HorizontalAlignment="Left" Margin="0,8,0,0">
                             <ComboBox.ItemsSource>
-                                <x:Array Type="sys:String" xmlns:sys="clr-namespace:System;assembly=mscorlib">
+                                <x:Array Type="sys:String" xmlns:sys="clr-namespace:System;assembly=System.Runtime">
                                     <sys:String>Español</sys:String>
+                                    <sys:String>English</sys:String>
                                 </x:Array>
                             </ComboBox.ItemsSource>
                         </ComboBox>
@@ -112,7 +122,8 @@
             <!-- NOTIFICACIONES -->
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
                 <StackPanel>
-                    <TextBlock Text="NOTIFICACIONES" FontSize="11"
+                    <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Settings_Notifications]}"
+                               FontSize="11"
                                Foreground="{DynamicResource TextDisabledBrush}"
                                Margin="0,0,0,12"/>
                     <Grid Margin="0,0,0,8">
@@ -120,12 +131,14 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Duración (segundos)"
+                        <TextBlock Grid.Column="0"
+                                   Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Settings_Duration]}"
                                    FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}"
                                    VerticalAlignment="Center"/>
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                             <Slider Value="{Binding NotificationDuration}" Minimum="1" Maximum="6" Width="100"
-                                    TickFrequency="0.5" IsSnapToTickEnabled="True"/>
+                                     TickFrequency="0.5" IsSnapToTickEnabled="True"
+                                     Style="{StaticResource ModernSliderStyle}"/>
                             <TextBlock Text="{Binding NotificationDuration, StringFormat={}{0:F1}s}"
                                        FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
                                        Margin="8,0,0,0" Width="40"/>
@@ -137,12 +150,14 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Umbral alerta batería"
+                        <TextBlock Grid.Column="0"
+                                   Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Settings_BatteryAlert]}"
                                    FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}"
                                    VerticalAlignment="Center"/>
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Slider Value="{Binding BatteryWarningThreshold}" Minimum="5" Maximum="50" Width="100"
-                                    TickFrequency="5" IsSnapToTickEnabled="True"/>
+                             <Slider Value="{Binding BatteryWarningThreshold}" Minimum="5" Maximum="50" Width="100"
+                                     TickFrequency="5" IsSnapToTickEnabled="True"
+                                     Style="{StaticResource ModernSliderStyle}"/>
                             <TextBlock Text="{Binding BatteryWarningThreshold, StringFormat={}{0}%}"
                                        FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
                                        Margin="8,0,0,0" Width="40"/>
@@ -154,18 +169,20 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Notificaciones de conexión"
+                        <TextBlock Grid.Column="0"
+                                   Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Settings_ConnectionNotifs]}"
                                    FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                        <CheckBox Grid.Column="1" IsChecked="{Binding ShowConnectionNotifications}"/>
+                        <ToggleButton Grid.Column="1" IsChecked="{Binding ShowConnectionNotifications}" Style="{StaticResource ModernToggleSwitch}"/>
                     </Grid>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Notificaciones de batería"
+                        <TextBlock Grid.Column="0"
+                                   Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Settings_BatteryNotifs]}"
                                    FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                        <CheckBox Grid.Column="1" IsChecked="{Binding ShowBatteryNotifications}"/>
+                        <ToggleButton Grid.Column="1" IsChecked="{Binding ShowBatteryNotifications}" Style="{StaticResource ModernToggleSwitch}"/>
                     </Grid>
                 </StackPanel>
             </Border>
@@ -173,7 +190,8 @@
             <!-- ACERCA DE -->
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
                 <StackPanel>
-                    <TextBlock Text="ACERCA DE" FontSize="11"
+                    <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Settings_About]}"
+                               FontSize="11"
                                Foreground="{DynamicResource TextDisabledBrush}"
                                Margin="0,0,0,12"/>
                     <Grid>
@@ -185,13 +203,15 @@
                             <ColumnDefinition Width="120"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Versión"
+                        <TextBlock Grid.Row="0" Grid.Column="0"
+                                   Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Settings_Version]}"
                                    FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <TextBlock Grid.Row="0" Grid.Column="1"
                                    Text="{Binding AppVersion}"
                                    FontSize="13" FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextPrimaryBrush}"/>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Compilación"
+                        <TextBlock Grid.Row="1" Grid.Column="0"
+                                   Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Settings_Build]}"
                                    FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
                                    Margin="0,4,0,0"/>
                         <TextBlock Grid.Row="1" Grid.Column="1"
@@ -200,6 +220,43 @@
                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                    Margin="0,4,0,0"/>
                     </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ACTUALIZACIONES -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="ACTUALIZACIONES" FontSize="11"
+                               Foreground="{DynamicResource TextDisabledBrush}"
+                               Margin="0,0,0,12"/>
+                    <TextBlock Text="{Binding Updater.StatusText}"
+                               FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}"
+                               Margin="0,0,0,8"/>
+                    <ProgressBar Value="{Binding Updater.DownloadProgress, Mode=OneWay}"
+                                 Maximum="100" Height="4" Minimum="0"
+                                 Foreground="{StaticResource PrimaryBrush}"
+                                 Background="{DynamicResource SurfaceAltBrush}"
+                                 BorderThickness="0" Margin="0,0,0,8"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Buscar actualizaciones"
+                                Command="{Binding CheckForUpdatesCommand}"
+                                IsEnabled="{Binding Updater.CanCheck}"
+                                Background="{StaticResource PrimaryBrush}"
+                                Foreground="White" BorderThickness="0"
+                                Padding="14,6" FontSize="13"/>
+                        <Button Content="Descargar"
+                                Command="{Binding DownloadUpdateCommand}"
+                                IsEnabled="{Binding Updater.CanInstall}"
+                                Background="{StaticResource SecondaryBrush}"
+                                Foreground="White" BorderThickness="0"
+                                Padding="14,6" FontSize="13" Margin="8,0,0,0"/>
+                        <Button Content="Instalar"
+                                Command="{Binding InstallUpdateCommand}"
+                                IsEnabled="{Binding Updater.CanInstall}"
+                                Background="{StaticResource ConnectedBrush}"
+                                Foreground="White" BorderThickness="0"
+                                Padding="14,6" FontSize="13" Margin="8,0,0,0"/>
+                    </StackPanel>
                 </StackPanel>
             </Border>
 

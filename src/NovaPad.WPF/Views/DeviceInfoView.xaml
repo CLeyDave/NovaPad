@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:NovaPad.WPF.ViewModels"
+             xmlns:services="clr-namespace:NovaPad.WPF.Services"
              mc:Ignorable="d"
              Background="{DynamicResource BackgroundBrush}"
              d:DataContext="{d:DesignInstance vm:DeviceInfoViewModel}">
@@ -14,7 +15,8 @@
             <!-- Controller picker -->
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
                 <StackPanel>
-                    <TextBlock Text="MANDO" FontSize="11"
+                    <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[DeviceInfo_Title]}"
+                               FontSize="11"
                                Foreground="{DynamicResource TextDisabledBrush}"
                                Margin="0,0,0,8"/>
                     <ComboBox ItemsSource="{Binding Pool}"
@@ -30,7 +32,8 @@
                 <!-- Identity -->
                 <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
                     <StackPanel>
-                        <TextBlock Text="IDENTIDAD" FontSize="11"
+                        <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[DeviceInfo_Identity]}"
+                                   FontSize="11"
                                    Foreground="{DynamicResource TextDisabledBrush}"
                                    Margin="0,0,0,12"/>
                         <Grid>
@@ -44,18 +47,21 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Nombre"
+                            <TextBlock Grid.Row="0" Grid.Column="0"
+                                       Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[DeviceInfo_Name]}"
                                        FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Name}"
                                        FontSize="13" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextPrimaryBrush}" Margin="8,0,0,4"/>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Tipo"
+                            <TextBlock Grid.Row="1" Grid.Column="0"
+                                       Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[DeviceInfo_Type]}"
                                        FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Kind}"
                                        FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" Margin="8,0,0,4"/>
 
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Conexión"
+                            <TextBlock Grid.Row="2" Grid.Column="0"
+                                       Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[DeviceInfo_Connection]}"
                                        FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Link}"
                                        FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" Margin="8,0,0,4"/>
@@ -66,7 +72,8 @@
                 <!-- Hardware -->
                 <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
                     <StackPanel>
-                        <TextBlock Text="HARDWARE" FontSize="11"
+                        <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[DeviceInfo_Hardware]}"
+                                   FontSize="11"
                                    Foreground="{DynamicResource TextDisabledBrush}"
                                    Margin="0,0,0,12"/>
                         <Grid>
@@ -82,30 +89,35 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="VID"
+                            <TextBlock Grid.Row="0" Grid.Column="0"
+                                       Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[DeviceInfo_VID]}"
                                        FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Vendor}"
                                        FontSize="13" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextPrimaryBrush}" Margin="8,0,0,4"/>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="PID"
+                            <TextBlock Grid.Row="1" Grid.Column="0"
+                                       Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[DeviceInfo_PID]}"
                                        FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Device}"
                                        FontSize="13" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextPrimaryBrush}" Margin="8,0,0,4"/>
 
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Ruta HID"
+                            <TextBlock Grid.Row="2" Grid.Column="0"
+                                       Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[DeviceInfo_HIDPath]}"
                                        FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Hid}"
                                        FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"
                                        Margin="8,0,0,4" TextTrimming="CharacterEllipsis"/>
 
-                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Firmware"
+                            <TextBlock Grid.Row="3" Grid.Column="0"
+                                       Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[DeviceInfo_Firmware]}"
                                        FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Version}"
                                        FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" Margin="8,0,0,4"/>
 
-                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Capacidades"
+                            <TextBlock Grid.Row="4" Grid.Column="0"
+                                       Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[DeviceInfo_Capabilities]}"
                                        FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Features}"
                                        FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" Margin="8,0,0,4"/>
@@ -116,7 +128,8 @@
                 <!-- Status -->
                 <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
                     <StackPanel>
-                        <TextBlock Text="ESTADO" FontSize="11"
+                        <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[DeviceInfo_Status]}"
+                                   FontSize="11"
                                    Foreground="{DynamicResource TextDisabledBrush}"
                                    Margin="0,0,0,12"/>
                         <Grid>
@@ -132,7 +145,8 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Batería"
+                            <TextBlock Grid.Row="0" Grid.Column="0"
+                                       Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[DeviceInfo_Battery]}"
                                        FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Margin="8,0,0,4">
                                 <TextBlock Text="{Binding Power}" FontSize="13" FontWeight="SemiBold"
@@ -141,23 +155,27 @@
                                             Foreground="{StaticResource PrimaryBrush}" Margin="6,2,0,0"/>
                             </StackPanel>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Latencia"
+                            <TextBlock Grid.Row="1" Grid.Column="0"
+                                       Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[DeviceInfo_Latency]}"
                                        FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Response}"
                                        FontSize="13" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextPrimaryBrush}" Margin="8,0,0,4"/>
 
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Frecuencia"
+                            <TextBlock Grid.Row="2" Grid.Column="0"
+                                       Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[DeviceInfo_Frequency]}"
                                        FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Rate}"
                                        FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" Margin="8,0,0,4"/>
 
-                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Señal"
+                            <TextBlock Grid.Row="3" Grid.Column="0"
+                                       Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[DeviceInfo_Signal]}"
                                        FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Strength}"
                                        FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" Margin="8,0,0,4"/>
 
-                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Activo"
+                            <TextBlock Grid.Row="4" Grid.Column="0"
+                                       Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[DeviceInfo_Active]}"
                                        FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Online}"
                                        FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" Margin="8,0,0,4"/>
@@ -185,7 +203,8 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" HorizontalAlignment="Center">
-                            <TextBlock Text="SEÑAL" FontSize="11"
+                            <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[DeviceInfo_Signal]}"
+                                       FontSize="11"
                                        Foreground="{DynamicResource TextDisabledBrush}"
                                        HorizontalAlignment="Center"/>
                             <TextBlock Text="{Binding Strength}" FontSize="20" FontWeight="Bold"
@@ -193,7 +212,8 @@
                                        HorizontalAlignment="Center" Margin="0,4,0,0"/>
                         </StackPanel>
                         <StackPanel Grid.Column="1" HorizontalAlignment="Center">
-                            <TextBlock Text="LATENCIA" FontSize="11"
+                            <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[DeviceInfo_LatencyTitle]}"
+                                       FontSize="11"
                                        Foreground="{DynamicResource TextDisabledBrush}"
                                        HorizontalAlignment="Center"/>
                             <TextBlock Text="{Binding Response}" FontSize="20" FontWeight="Bold"
@@ -201,7 +221,8 @@
                                        HorizontalAlignment="Center" Margin="0,4,0,0"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2" HorizontalAlignment="Center">
-                            <TextBlock Text="FRECUENCIA" FontSize="11"
+                            <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[DeviceInfo_FrequencyTitle]}"
+                                       FontSize="11"
                                        Foreground="{DynamicResource TextDisabledBrush}"
                                        HorizontalAlignment="Center"/>
                             <TextBlock Text="{Binding Rate}" FontSize="20" FontWeight="Bold"
@@ -215,7 +236,7 @@
             <!-- Empty -->
             <Border Style="{StaticResource CardStyle}"
                     Visibility="{Binding Idle, Converter={StaticResource BoolToVis}}">
-                <TextBlock Text="Conecta un mando para ver información del dispositivo."
+                <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[DeviceInfo_Empty]}"
                            FontSize="14" Foreground="{DynamicResource TextDisabledBrush}"
                            HorizontalAlignment="Center" Margin="0,32"/>
             </Border>

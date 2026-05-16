@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Windows;
 using NovaPad.Core.Interfaces;
 using NovaPad.Core.Models;
 
@@ -35,6 +36,12 @@ public class NotificationService : INotificationService
 
     public void Dismiss(string notificationId)
     {
+        if (Application.Current?.Dispatcher.CheckAccess() == false)
+        {
+            Application.Current.Dispatcher.Invoke(() => Dismiss(notificationId));
+            return;
+        }
+
         var notification = _notifications.FirstOrDefault(n => n.Id == notificationId);
         if (notification != null)
         {
@@ -45,6 +52,12 @@ public class NotificationService : INotificationService
 
     public void DismissAll()
     {
+        if (Application.Current?.Dispatcher.CheckAccess() == false)
+        {
+            Application.Current.Dispatcher.Invoke(DismissAll);
+            return;
+        }
+
         foreach (var n in _notifications.ToList())
         {
             n.IsDismissed = true;

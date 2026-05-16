@@ -11,7 +11,10 @@ public partial class SettingsViewModel : ObservableObject
 {
     private readonly IAppSettingsService _settings;
     private readonly IThemeService _themeService;
-    private readonly OverlayClient _overlayClient;
+    private readonly IOverlayService _overlay;
+    private readonly LocalizationService _localization;
+    private readonly UpdateService _updater;
+    private bool _loading;
 
     [ObservableProperty] private bool _startWithWindows;
     [ObservableProperty] private bool _minimizeToTray;
@@ -25,41 +28,84 @@ public partial class SettingsViewModel : ObservableObject
 
     public string AppVersion { get; }
     public string BuildDate { get; }
+    public UpdateService Updater => _updater;
 
-    public SettingsViewModel(IAppSettingsService settings, IThemeService themeService, OverlayClient overlayClient)
+    public SettingsViewModel(IAppSettingsService settings, IThemeService themeService, IOverlayService overlay)
     {
         _settings = settings;
         _themeService = themeService;
-        _overlayClient = overlayClient;
+        _overlay = overlay;
+        _localization = LocalizationService.Instance;
+        _updater = new UpdateService();
 
         var version = Assembly.GetExecutingAssembly().GetName().Version;
         AppVersion = version != null ? $"v{version.Major}.{version.Minor}.{version.Build}" : "v1.0.0";
-        BuildDate = "2025-03";
+        BuildDate = "2026-05";
 
         LoadSettings();
     }
 
+    [RelayCommand]
+    private async Task CheckForUpdatesAsync()
+    {
+        await _updater.CheckForUpdatesAsync();
+    }
+
+    [RelayCommand]
+    private async Task DownloadUpdateAsync()
+    {
+        await _updater.DownloadUpdateAsync();
+    }
+
+    [RelayCommand]
+    private void InstallUpdate()
+    {
+        _updater.InstallUpdate();
+    }
+
     private void LoadSettings()
     {
+        _loading = true;
         var s = _settings.Settings;
-        StartWithWindows = s.StartWithWindows;
-        MinimizeToTray = s.MinimizeToTray;
-        Theme = _themeService.IsDarkTheme ? "Oscuro" : "Claro";
+        _startWithWindows = s.StartWithWindows;
+        _minimizeToTray = s.MinimizeToTray;
+        _theme = _themeService.IsDarkTheme ? "Oscuro" : "Claro";
+        _localization.CurrentLang = s.Language;
+        _language = _localization.IsEnglish ? "English" : "Español";
 
-        NotificationDuration = s.Notifications.DurationSeconds;
-        BatteryWarningThreshold = s.Notifications.BatteryWarningThreshold;
-        ShowConnectionNotifications = s.Notifications.ShowConnectionNotifications;
-        ShowBatteryNotifications = s.Notifications.ShowBatteryNotifications;
+        _notificationDuration = s.Notifications.DurationSeconds;
+        _batteryWarningThreshold = s.Notifications.BatteryWarningThreshold;
+        _showConnectionNotifications = s.Notifications.ShowConnectionNotifications;
+        _showBatteryNotifications = s.Notifications.ShowBatteryNotifications;
+        OnPropertyChanged(nameof(StartWithWindows));
+        OnPropertyChanged(nameof(MinimizeToTray));
+        OnPropertyChanged(nameof(Theme));
+        OnPropertyChanged(nameof(Language));
+        OnPropertyChanged(nameof(NotificationDuration));
+        OnPropertyChanged(nameof(BatteryWarningThreshold));
+        OnPropertyChanged(nameof(ShowConnectionNotifications));
+        OnPropertyChanged(nameof(ShowBatteryNotifications));
+        _loading = false;
+    }
+
+    partial void OnLanguageChanged(string value)
+    {
+        if (_loading) return;
+        _localization.IsEnglish = value == "English";
+        _settings.Settings.Language = _localization.CurrentLang;
+        AutoSave();
     }
 
     partial void OnThemeChanged(string value)
     {
+        if (_loading) return;
         _themeService.SetTheme(value == "Oscuro");
         AutoSave();
     }
 
     partial void OnStartWithWindowsChanged(bool value)
     {
+        if (_loading) return;
         try
         {
             var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
@@ -75,11 +121,11 @@ public partial class SettingsViewModel : ObservableObject
         AutoSave();
     }
 
-    partial void OnMinimizeToTrayChanged(bool value) => AutoSave();
-    partial void OnNotificationDurationChanged(double value) => AutoSave();
-    partial void OnBatteryWarningThresholdChanged(int value) => AutoSave();
-    partial void OnShowConnectionNotificationsChanged(bool value) => AutoSave();
-    partial void OnShowBatteryNotificationsChanged(bool value) => AutoSave();
+    partial void OnMinimizeToTrayChanged(bool value) { if (!_loading) AutoSave(); }
+    partial void OnNotificationDurationChanged(double value) { if (!_loading) AutoSave(); }
+    partial void OnBatteryWarningThresholdChanged(int value) { if (!_loading) AutoSave(); }
+    partial void OnShowConnectionNotificationsChanged(bool value) { if (!_loading) AutoSave(); }
+    partial void OnShowBatteryNotificationsChanged(bool value) { if (!_loading) AutoSave(); }
 
     private void AutoSave()
     {
@@ -95,17 +141,17 @@ public partial class SettingsViewModel : ObservableObject
 
         _settings.Save();
 
-        _ = SendSettingsAsync();
+        SendSettingsAsync();
     }
 
-    private async Task SendSettingsAsync()
+    private void SendSettingsAsync()
     {
         try
         {
-            await _overlayClient.SendAsync(new ThemeChangedEvent
+            _overlay.NotifyTheme(new CambioTema
             {
-                IsDark = Theme == "Oscuro",
-                BackgroundOpacity = _settings.Settings.Overlay.Opacity
+                Oscuro = Theme == "Oscuro",
+                OpacidadFondo = _settings.Settings.Overlay.Opacidad
             });
         }
         catch { }

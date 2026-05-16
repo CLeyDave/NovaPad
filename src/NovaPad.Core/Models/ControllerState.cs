@@ -69,6 +69,9 @@ public class ControllerState
         ButtonType.LeftStick => LeftStickClick,
         ButtonType.RightStick => RightStickClick,
         ButtonType.TouchpadClick => TouchpadClick,
+        ButtonType.Gyro => GyroPitch != 0 || GyroYaw != 0 || GyroRoll != 0,
+        ButtonType.Accelerometer => AccelX != 0 || AccelY != 0 || AccelZ != 0,
+        ButtonType.Custom => false,
         _ => false
     };
 }

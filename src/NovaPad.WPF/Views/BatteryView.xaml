@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:NovaPad.WPF.ViewModels"
+             xmlns:services="clr-namespace:NovaPad.WPF.Services"
              mc:Ignorable="d"
              Background="{DynamicResource BackgroundBrush}"
              d:DataContext="{d:DesignInstance vm:BatteryViewModel}">
@@ -20,7 +21,8 @@
                           Stretch="Uniform" Width="22" Height="22"
                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
-                <TextBlock Text="BATERÍA DE MANDOS" Style="{StaticResource SectionTitleStyle}"
+                <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Battery_Title]}"
+                           Style="{StaticResource SectionTitleStyle}"
                            VerticalAlignment="Center"/>
             </StackPanel>
 
@@ -86,7 +88,7 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <TextBlock Text="No hay mandos conectados."
+            <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Battery_Empty]}"
                        FontSize="14" Foreground="{DynamicResource TextDisabledBrush}"
                        HorizontalAlignment="Center" Margin="0,40,0,0"
                        Visibility="{Binding HasControllers, Converter={StaticResource BoolToVisInverted}}"/>

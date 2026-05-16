@@ -4,9 +4,15 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:NovaPad.WPF.ViewModels"
+             xmlns:services="clr-namespace:NovaPad.WPF.Services"
+             xmlns:conv="clr-namespace:NovaPad.WPF.Converters"
              mc:Ignorable="d"
              Background="{DynamicResource BackgroundBrush}"
              d:DataContext="{d:DesignInstance vm:RGBViewModel}">
+
+    <UserControl.Resources>
+        <conv:ColorPresetToBrushConverter x:Key="ColorPresetToBrush"/>
+    </UserControl.Resources>
 
     <ScrollViewer Style="{StaticResource ModernScrollViewer}" Padding="24">
         <StackPanel MaxWidth="560">
@@ -21,9 +27,11 @@
                           VerticalAlignment="Center" HorizontalAlignment="Center"/>
                 </Border>
                 <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="Iluminación RGB" FontSize="22" FontWeight="SemiBold"
+                    <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[RGB_Title]}"
+                               FontSize="22" FontWeight="SemiBold"
                                Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    <TextBlock Text="Control de LEDs para DualSense y DualShock 4" FontSize="12"
+                    <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[RGB_Subtitle]}"
+                               FontSize="12"
                                Foreground="{DynamicResource TextSecondaryBrush}"/>
                 </StackPanel>
             </StackPanel>
@@ -31,7 +39,8 @@
             <!-- Selección de mando -->
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
                 <StackPanel>
-                    <TextBlock Text="MANDO" FontSize="11"
+                    <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[RGB_Controller]}"
+                               FontSize="11"
                                Foreground="{DynamicResource TextDisabledBrush}"
                                Margin="0,0,0,12"/>
                     <ComboBox ItemsSource="{Binding Controllers}"
@@ -39,7 +48,7 @@
                               DisplayMemberPath="EffectiveName"
                               Style="{StaticResource ModernComboBoxStyle}"
                               MinWidth="250"/>
-                    <TextBlock Text="Este mando no es compatible con iluminación RGB"
+                    <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[RGB_NotSupported]}"
                                FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
                                Margin="0,8,0,0"
                                Visibility="{Binding IsRgbSupported, Converter={StaticResource BoolToVisInverted}}"/>
@@ -50,7 +59,8 @@
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16"
                     Visibility="{Binding IsRgbSupported, Converter={StaticResource BoolToVis}}">
                 <StackPanel>
-                    <TextBlock Text="COLOR" FontSize="11"
+                    <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[RGB_Color]}"
+                               FontSize="11"
                                Foreground="{DynamicResource TextDisabledBrush}"
                                Margin="0,0,0,12"/>
 
@@ -63,7 +73,8 @@
                         <TextBlock Grid.Column="0" Text="R" FontSize="13" FontWeight="Bold"
                                    Foreground="#EF5350" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <Slider Grid.Column="1" Value="{Binding RgbRed}" Minimum="0" Maximum="255"
-                                TickFrequency="15" IsSnapToTickEnabled="True"/>
+                                TickFrequency="15" IsSnapToTickEnabled="True"
+                                Style="{StaticResource ModernSliderStyle}"/>
                         <TextBlock Grid.Column="2" Text="{Binding RgbRed}" FontSize="12"
                                    Foreground="{DynamicResource TextSecondaryBrush}"
                                    VerticalAlignment="Center" HorizontalAlignment="Right"/>
@@ -78,7 +89,8 @@
                         <TextBlock Grid.Column="0" Text="G" FontSize="13" FontWeight="Bold"
                                    Foreground="#66BB6A" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <Slider Grid.Column="1" Value="{Binding RgbGreen}" Minimum="0" Maximum="255"
-                                TickFrequency="15" IsSnapToTickEnabled="True"/>
+                                TickFrequency="15" IsSnapToTickEnabled="True"
+                                Style="{StaticResource ModernSliderStyle}"/>
                         <TextBlock Grid.Column="2" Text="{Binding RgbGreen}" FontSize="12"
                                    Foreground="{DynamicResource TextSecondaryBrush}"
                                    VerticalAlignment="Center" HorizontalAlignment="Right"/>
@@ -93,7 +105,8 @@
                         <TextBlock Grid.Column="0" Text="B" FontSize="13" FontWeight="Bold"
                                    Foreground="#42A5F5" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <Slider Grid.Column="1" Value="{Binding RgbBlue}" Minimum="0" Maximum="255"
-                                TickFrequency="15" IsSnapToTickEnabled="True"/>
+                                TickFrequency="15" IsSnapToTickEnabled="True"
+                                Style="{StaticResource ModernSliderStyle}"/>
                         <TextBlock Grid.Column="2" Text="{Binding RgbBlue}" FontSize="12"
                                    Foreground="{DynamicResource TextSecondaryBrush}"
                                    VerticalAlignment="Center" HorizontalAlignment="Right"/>
@@ -101,16 +114,141 @@
 
                     <Rectangle Height="1" Fill="{DynamicResource BorderBrush}" Margin="0,0,0,12"/>
 
-                    <TextBlock Text="EFECTO" FontSize="11"
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="48"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Width="40" Height="40" CornerRadius="8"
+                                BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
+                                Background="{Binding CurrentColorBrush}"/>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding RgbHex}" FontSize="16" FontWeight="SemiBold"
+                                       FontFamily="Consolas"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            <TextBlock Text="{Binding RgbLabel}" FontSize="11"
+                                       FontFamily="Consolas"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Rectangle Height="1" Fill="{DynamicResource BorderBrush}" Margin="0,0,0,12"/>
+
+                    <TextBlock Text="COLORES COMPLETOS" FontSize="11"
+                               Foreground="{DynamicResource TextDisabledBrush}"
+                               Margin="0,0,0,8"/>
+                    <ItemsControl ItemsSource="{x:Static vm:RGBViewModel.FullColors}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel MaxWidth="480"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Width="48" Height="48" Margin="3" CornerRadius="8"
+                                        BorderThickness="1" BorderBrush="#44FFFFFF">
+                                    <Button Margin="1" Padding="0" Cursor="Hand"
+                                            BorderThickness="0" ToolTip="{Binding Name}"
+                                            Background="{Binding Converter={StaticResource ColorPresetToBrush}}"
+                                            Command="{Binding DataContext.SetPresetColorCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"/>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Rectangle Height="1" Fill="{DynamicResource BorderBrush}" Margin="0,12"/>
+
+                    <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[RGB_Effect]}"
+                               FontSize="11"
                                Foreground="{DynamicResource TextDisabledBrush}"
                                Margin="0,0,0,12"/>
-                    <ComboBox SelectedIndex="{Binding SelectedEffectIndex}"
+                     <ComboBox SelectedIndex="{Binding SelectedEffectIndex}"
+                              Style="{StaticResource ModernComboBoxStyle}"
                               HorizontalAlignment="Left" MinWidth="200">
-                        <ComboBoxItem Content="Estático"/>
-                        <ComboBoxItem Content="Pulso"/>
-                        <ComboBoxItem Content="Arcoíris"/>
-                        <ComboBoxItem Content="Batería"/>
+                        <ComboBoxItem Content="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[RGB_Static]}"/>
+                        <ComboBoxItem Content="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[RGB_Pulse]}"/>
+                        <ComboBoxItem Content="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[RGB_Rainbow]}"/>
+                        <ComboBoxItem Content="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[RGB_Battery]}"/>
+                        <ComboBoxItem Content="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[RGB_Strobe]}"/>
+                        <ComboBoxItem Content="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[RGB_Heartbeat]}"/>
+                        <ComboBoxItem Content="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[RGB_Fire]}"/>
+                        <ComboBoxItem Content="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[RGB_Disco]}"/>
+                        <ComboBoxItem Content="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[RGB_Wave]}"/>
+                        <ComboBoxItem Content="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[RGB_Meteor]}"/>
+                        <ComboBoxItem Content="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[RGB_Aurora]}"/>
+                        <ComboBoxItem Content="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[RGB_Storm]}"/>
                     </ComboBox>
+
+                    <StackPanel Visibility="{Binding IsSecondColorVisible, Converter={StaticResource BoolToVis}}"
+                                Margin="0,12,0,0">
+                        <Rectangle Height="1" Fill="{DynamicResource BorderBrush}" Margin="0,0,0,12"/>
+                        <TextBlock Text="COLOR SECUNDARIO" FontSize="11"
+                                   Foreground="{DynamicResource TextDisabledBrush}"
+                                   Margin="0,0,0,12"/>
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="40"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="R" FontSize="13" FontWeight="Bold"
+                                       Foreground="#EF5350" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <Slider Grid.Column="1" Value="{Binding RgbRed2}" Minimum="0" Maximum="255"
+                                    TickFrequency="15" IsSnapToTickEnabled="True"
+                                    Style="{StaticResource ModernSliderStyle}"/>
+                            <TextBlock Grid.Column="2" Text="{Binding RgbRed2}" FontSize="12"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                        </Grid>
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="40"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="G" FontSize="13" FontWeight="Bold"
+                                       Foreground="#66BB6A" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <Slider Grid.Column="1" Value="{Binding RgbGreen2}" Minimum="0" Maximum="255"
+                                    TickFrequency="15" IsSnapToTickEnabled="True"
+                                    Style="{StaticResource ModernSliderStyle}"/>
+                            <TextBlock Grid.Column="2" Text="{Binding RgbGreen2}" FontSize="12"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                        </Grid>
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="40"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="B" FontSize="13" FontWeight="Bold"
+                                       Foreground="#42A5F5" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <Slider Grid.Column="1" Value="{Binding RgbBlue2}" Minimum="0" Maximum="255"
+                                    TickFrequency="15" IsSnapToTickEnabled="True"
+                                    Style="{StaticResource ModernSliderStyle}"/>
+                            <TextBlock Grid.Column="2" Text="{Binding RgbBlue2}" FontSize="12"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                        </Grid>
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="48"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Width="40" Height="40" CornerRadius="8"
+                                    BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
+                                    Background="{Binding CurrentColorBrush2}"/>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding RgbHex2}" FontSize="16" FontWeight="SemiBold"
+                                           FontFamily="Consolas"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                <TextBlock Text="{Binding RgbLabel2}" FontSize="11"
+                                           FontFamily="Consolas"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
                         <Button Command="{Binding StopRgbCommand}"
@@ -118,12 +256,12 @@
                                 BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
                                 Foreground="{DynamicResource TextPrimaryBrush}"
                                 Padding="16,8" Margin="0,0,8,0" Cursor="Hand"
-                                Content="Apagar"/>
+                                Content="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[RGB_Stop]}"/>
                         <Button Command="{Binding ApplyRgbCommand}"
                                 Background="{StaticResource PrimaryBrush}"
                                 Foreground="White" BorderThickness="0"
                                 Padding="16,8" Cursor="Hand"
-                                Content="Aplicar"/>
+                                Content="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[RGB_Apply]}"/>
                     </StackPanel>
                 </StackPanel>
             </Border>

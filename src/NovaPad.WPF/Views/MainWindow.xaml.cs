@@ -1,9 +1,17 @@
+using System.Diagnostics;
+using System.IO;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Interop;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using NovaPad.Core.Interfaces;
 using NovaPad.WPF.Infrastructure;
 using NovaPad.WPF.Services;
 using NovaPad.WPF.ViewModels;
+using Serilog;
 
 namespace NovaPad.WPF.Views;
 
@@ -17,6 +25,9 @@ public partial class MainWindow : Window
 
     public MainWindow(MainViewModel viewModel, NavigationService navigation, IAppSettingsService settings)
     {
+        var sw = Stopwatch.StartNew();
+        Log.Information("[MainWindow] Constructor start.");
+
         InitializeComponent();
         DataContext = viewModel;
         _viewModel = viewModel;
@@ -30,25 +41,46 @@ public partial class MainWindow : Window
         LoadSettings();
         Loaded += OnLoaded;
         Closing += OnClosing;
+
+        sw.Stop();
+        Log.Information("[MainWindow] Constructor done in {Ms}ms.", sw.ElapsedMilliseconds);
     }
 
     private void LoadSettings()
     {
         var ws = _settings.Settings.Window;
-        if (!ws.IsMaximized)
+        if (!ws.IsMaximized && !double.IsNaN(ws.Left) && ws.Width > 0)
         {
             Left = ws.Left;
             Top = ws.Top;
             Width = ws.Width;
             Height = ws.Height;
         }
-        _normalBounds = new Rect(Left, Top, Width, Height);
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
+        LoadAppIcon();
+        _normalBounds = new Rect(Left, Top, Width, Height);
         if (_settings.Settings.Window.IsMaximized)
             MaximizeToWorkArea();
+    }
+
+    private void LoadAppIcon()
+    {
+        try
+        {
+            var uri = new Uri("pack://application:,,,/NovaPadIcon.png");
+            var bmp = new BitmapImage(uri);
+            bmp.Freeze();
+            Icon = bmp;
+            TrayIcon.IconSource = bmp;
+            Log.Information("[MainWindow] App icon loaded from PNG resource.");
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "[MainWindow] Failed to load app icon");
+        }
     }
 
     private void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
@@ -61,7 +93,11 @@ public partial class MainWindow : Window
             e.Cancel = true;
             TrayIcon.Visibility = Visibility.Visible;
             Hide();
+            return;
         }
+
+        TrayIcon.Dispose();
+        Application.Current.Shutdown();
     }
 
     private void SaveWindowSettings()
@@ -154,8 +190,8 @@ public partial class MainWindow : Window
             App.GetService<RGBViewModel>()));
         _navigation.RegisterView("SettingsView", () => new SettingsView(
             App.GetService<SettingsViewModel>()));
-        _navigation.RegisterView("OverlaySettingsView", () => new OverlaySettingsView(
-            App.GetService<OverlaySettingsViewModel>()));
+        _navigation.RegisterView("OverlaySettingsView", () => new PaginaOverlay(
+            App.GetService<AdminOverlayVm>()));
     }
 
     private void MinimizeClick(object sender, RoutedEventArgs e)
@@ -174,11 +210,57 @@ public partial class MainWindow : Window
 
     private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.ClickCount == 2)
+        if (e.ChangedButton == MouseButton.Left && e.ClickCount == 2)
         {
             MaximizeClick(sender, e);
             return;
         }
-        DragMove();
+        if (e.ChangedButton == MouseButton.Left)
+            DragMove();
+    }
+
+    // Ctrl+Shift+O hotkey (backup for overlay panel)
+    private const int WM_HOTKEY = 0x0312;
+    private const int IdOverlayHotkey = 9002;
+    private const int MOD_CONTROL = 0x0002;
+    private const int MOD_SHIFT = 0x0004;
+    private const int VK_O = 0x4F;
+
+    [DllImport("user32.dll")]
+    private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+
+    [DllImport("user32.dll")]
+    private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        var hwnd = new WindowInteropHelper(this).Handle;
+        var source = HwndSource.FromHwnd(hwnd);
+        source?.AddHook(WndProc);
+        RegisterHotKey(hwnd, IdOverlayHotkey, MOD_CONTROL | MOD_SHIFT, VK_O);
+        Log.Information("[MainWindow] Hotkey Ctrl+Shift+O registered");
+    }
+
+    private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (msg == WM_HOTKEY && wParam.ToInt32() == IdOverlayHotkey)
+        {
+            try
+            {
+                var overlay = App.GetService<IOverlayService>();
+                overlay.TogglePanel();
+            }
+            catch { }
+            handled = true;
+        }
+        return IntPtr.Zero;
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        var hwnd = new WindowInteropHelper(this).Handle;
+        UnregisterHotKey(hwnd, IdOverlayHotkey);
+        base.OnClosed(e);
     }
 }

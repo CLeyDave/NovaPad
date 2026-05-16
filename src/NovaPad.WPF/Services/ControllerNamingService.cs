@@ -11,11 +11,7 @@ public class ControllerNamingService : IControllerNamingService
 
     public ControllerNamingService()
     {
-        var dir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "NovaPad", "controllers");
-        Directory.CreateDirectory(dir);
-        _filePath = Path.Combine(dir, "names.json");
+        _filePath = Path.Combine(AppContext.BaseDirectory, "names.json");
     }
 
     public string? GetCustomName(string controllerId)

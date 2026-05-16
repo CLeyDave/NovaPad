@@ -1,6 +1,5 @@
 using NovaPad.Core.Interfaces;
 using NovaPad.Core.Models;
-using NovaPad.Core.Enums;
 
 namespace NovaPad.WPF.Services;
 
@@ -8,15 +7,16 @@ public class InputProcessingService : IInputProcessingService
 {
     public event EventHandler<ProcessedInputEventArgs>? InputProcessed;
 
-    private readonly Dictionary<string, InputConfig> _configs = new();
+    private readonly IAppSettingsService _settings;
+
+    public InputProcessingService(IAppSettingsService settings)
+    {
+        _settings = settings;
+    }
 
     public ControllerState ProcessRawInput(ControllerState rawState, string profileId)
     {
-        if (!_configs.TryGetValue(rawState.ControllerId, out var config))
-        {
-            config = new InputConfig();
-            _configs[rawState.ControllerId] = config;
-        }
+        var cfg = ObtenerConfig(rawState.ControllerId);
 
         var processed = new ControllerState
         {
@@ -35,26 +35,26 @@ public class InputProcessingService : IInputProcessingService
         };
 
         processed.LeftStickX = ProcessStickAxis(
-            rawState.LeftStickX, config.LeftStickDeadZone, config.LeftStickSensitivity,
-            config.LeftStickCurve, config.InvertLeftX);
+            rawState.LeftStickX, cfg.LeftStickDeadZone, cfg.LeftStickSensitivity,
+            cfg.LeftStickCurve, cfg.InvertLeftX);
 
         processed.LeftStickY = ProcessStickAxis(
-            rawState.LeftStickY, config.LeftStickDeadZone, config.LeftStickSensitivity,
-            config.LeftStickCurve, config.InvertLeftY);
+            rawState.LeftStickY, cfg.LeftStickDeadZone, cfg.LeftStickSensitivity,
+            cfg.LeftStickCurve, cfg.InvertLeftY);
 
         processed.RightStickX = ProcessStickAxis(
-            rawState.RightStickX, config.RightStickDeadZone, config.RightStickSensitivity,
-            config.RightStickCurve, config.InvertRightX);
+            rawState.RightStickX, cfg.RightStickDeadZone, cfg.RightStickSensitivity,
+            cfg.RightStickCurve, cfg.InvertRightX);
 
         processed.RightStickY = ProcessStickAxis(
-            rawState.RightStickY, config.RightStickDeadZone, config.RightStickSensitivity,
-            config.RightStickCurve, config.InvertRightY);
+            rawState.RightStickY, cfg.RightStickDeadZone, cfg.RightStickSensitivity,
+            cfg.RightStickCurve, cfg.InvertRightY);
 
         processed.LeftTrigger = ProcessTriggerAxis(
-            rawState.LeftTrigger, config.LeftTriggerDeadZone);
+            rawState.LeftTrigger, cfg.LeftTriggerDeadZone);
 
         processed.RightTrigger = ProcessTriggerAxis(
-            rawState.RightTrigger, config.RightTriggerDeadZone);
+            rawState.RightTrigger, cfg.RightTriggerDeadZone);
 
         InputProcessed?.Invoke(this, new ProcessedInputEventArgs
         {
@@ -67,37 +67,41 @@ public class InputProcessingService : IInputProcessingService
 
     public void SetDeadZone(string controllerId, double leftStick, double rightStick, double leftTrigger, double rightTrigger)
     {
-        var config = GetOrCreateConfig(controllerId);
-        config.LeftStickDeadZone = leftStick;
-        config.RightStickDeadZone = rightStick;
-        config.LeftTriggerDeadZone = leftTrigger;
-        config.RightTriggerDeadZone = rightTrigger;
+        var cfg = ObtenerConfig(controllerId);
+        cfg.LeftStickDeadZone = leftStick;
+        cfg.RightStickDeadZone = rightStick;
+        cfg.LeftTriggerDeadZone = leftTrigger;
+        cfg.RightTriggerDeadZone = rightTrigger;
+        _settings.Save();
     }
 
     public void SetStickCurve(string controllerId, string leftCurve, string rightCurve)
     {
-        var config = GetOrCreateConfig(controllerId);
-        config.LeftStickCurve = leftCurve;
-        config.RightStickCurve = rightCurve;
+        var cfg = ObtenerConfig(controllerId);
+        cfg.LeftStickCurve = leftCurve;
+        cfg.RightStickCurve = rightCurve;
+        _settings.Save();
     }
 
     public void SetInversion(string controllerId, bool invertLeftX, bool invertLeftY, bool invertRightX, bool invertRightY)
     {
-        var config = GetOrCreateConfig(controllerId);
-        config.InvertLeftX = invertLeftX;
-        config.InvertLeftY = invertLeftY;
-        config.InvertRightX = invertRightX;
-        config.InvertRightY = invertRightY;
+        var cfg = ObtenerConfig(controllerId);
+        cfg.InvertLeftX = invertLeftX;
+        cfg.InvertLeftY = invertLeftY;
+        cfg.InvertRightX = invertRightX;
+        cfg.InvertRightY = invertRightY;
+        _settings.Save();
     }
 
-    private InputConfig GetOrCreateConfig(string controllerId)
+    private InputProcessingConfig ObtenerConfig(string controllerId)
     {
-        if (!_configs.TryGetValue(controllerId, out var config))
+        var dict = _settings.Settings.InputProcessing;
+        if (!dict.TryGetValue(controllerId, out var cfg))
         {
-            config = new InputConfig();
-            _configs[controllerId] = config;
+            cfg = new InputProcessingConfig();
+            dict[controllerId] = cfg;
         }
-        return config;
+        return cfg;
     }
 
     private static double ProcessStickAxis(double value, double deadZone, double sensitivity, string curve, bool invert)
@@ -129,21 +133,5 @@ public class InputProcessingService : IInputProcessingService
             "Aggressive" => value * value * value + value * 0.3,
             _ => value
         };
-    }
-
-    private class InputConfig
-    {
-        public double LeftStickDeadZone { get; set; } = 0.15;
-        public double RightStickDeadZone { get; set; } = 0.15;
-        public double LeftTriggerDeadZone { get; set; } = 0.1;
-        public double RightTriggerDeadZone { get; set; } = 0.1;
-        public double LeftStickSensitivity { get; set; } = 1.0;
-        public double RightStickSensitivity { get; set; } = 1.0;
-        public string LeftStickCurve { get; set; } = "Linear";
-        public string RightStickCurve { get; set; } = "Linear";
-        public bool InvertLeftX { get; set; }
-        public bool InvertLeftY { get; set; }
-        public bool InvertRightX { get; set; }
-        public bool InvertRightY { get; set; }
     }
 }

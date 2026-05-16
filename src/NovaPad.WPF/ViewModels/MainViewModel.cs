@@ -18,9 +18,10 @@ public partial class MainViewModel : ObservableObject
     private readonly IAppSettingsService _settings;
     private readonly IControllerManagerService _controllerManager;
     private readonly INotificationService _notificationService;
-    private readonly OverlayProcessManager _overlayManager;
+    private readonly IOverlayService _overlay;
     private readonly DispatcherTimer _batteryTimer;
     private readonly DispatcherTimer _notificationCleanupTimer;
+    private bool _isScanning;
 
     public ObservableCollection<SidebarBatteryItem> BatteryItems { get; } = new();
     public ObservableCollection<NotificationMessage> Notifications { get; } = new();
@@ -39,21 +40,20 @@ public partial class MainViewModel : ObservableObject
 
     public ObservableCollection<NavigationItem> NavigationItems { get; } = new();
 
-    public MainViewModel(INavigationService navigation, IThemeService themeService, IAppSettingsService settings, IControllerManagerService controllerManager, INotificationService notificationService, OverlayProcessManager overlayManager)
+    public MainViewModel(INavigationService navigation, IThemeService themeService, IAppSettingsService settings, IControllerManagerService controllerManager, INotificationService notificationService, IOverlayService overlay)
     {
         _navigation = navigation;
         _themeService = themeService;
         _settings = settings;
         _controllerManager = controllerManager;
         _notificationService = notificationService;
-        _overlayManager = overlayManager;
+        _overlay = overlay;
 
         _isSidebarExpanded = _settings.Settings.Window.SidebarExpanded;
         _isDarkTheme = _themeService.IsDarkTheme;
 
         _controllerManager.ControllerConnected += OnControllerConnected;
         _controllerManager.ControllerDisconnected += OnControllerDisconnected;
-        _controllerManager.ControllerUpdated += OnControllerListChanged;
         _controllerManager.InputReceived += OnInputReceived;
 
         _batteryTimer = new DispatcherTimer
@@ -72,16 +72,41 @@ public partial class MainViewModel : ObservableObject
 
         RefreshBattery();
 
-        NavigationItems.Add(new NavigationItem { Label = "Panel", Icon = G("HomeIcon"), ViewName = "DashboardView" });
-        NavigationItems.Add(new NavigationItem { Label = "Mandos", Icon = G("GamepadIcon"), ViewName = "ControllerListView" });
-        NavigationItems.Add(new NavigationItem { Label = "Detalles", Icon = G("InfoIcon"), ViewName = "ControllerDetailView" });
-        NavigationItems.Add(new NavigationItem { Label = "Info Dispositivo", Icon = G("ActivityIcon"), ViewName = "DeviceInfoView" });
-        NavigationItems.Add(new NavigationItem { Label = "Batería", Icon = G("BatteryFullIcon"), ViewName = "BatteryView" });
-        NavigationItems.Add(new NavigationItem { Label = "RGB", Icon = G("PaletteIcon"), ViewName = "RGBView" });
-        NavigationItems.Add(new NavigationItem { Label = "Overlay", Icon = G("LayersIcon"), ViewName = "OverlaySettingsView" });
-        NavigationItems.Add(new NavigationItem { Label = "Configuración", Icon = G("SettingsIcon"), ViewName = "SettingsView" });
+        var loc = LocalizationService.Instance;
+        NavigationItems.Add(new NavigationItem { Label = loc["Nav_Dashboard"], Icon = G("HomeIcon"), ViewName = "DashboardView" });
+        NavigationItems.Add(new NavigationItem { Label = loc["Nav_Controllers"], Icon = G("GamepadIcon"), ViewName = "ControllerListView" });
+        NavigationItems.Add(new NavigationItem { Label = loc["Nav_Details"], Icon = G("InfoIcon"), ViewName = "ControllerDetailView" });
+        NavigationItems.Add(new NavigationItem { Label = loc["Nav_DeviceInfo"], Icon = G("ActivityIcon"), ViewName = "DeviceInfoView" });
+        NavigationItems.Add(new NavigationItem { Label = loc["Nav_Battery"], Icon = G("BatteryFullIcon"), ViewName = "BatteryView" });
+        NavigationItems.Add(new NavigationItem { Label = loc["Nav_RGB"], Icon = G("PaletteIcon"), ViewName = "RGBView" });
+        NavigationItems.Add(new NavigationItem { Label = loc["Nav_Overlay"], Icon = G("LayersIcon"), ViewName = "OverlaySettingsView" });
+        NavigationItems.Add(new NavigationItem { Label = loc["Nav_Settings"], Icon = G("SettingsIcon"), ViewName = "SettingsView" });
 
         SelectedItem = NavigationItems[0];
+
+        LocalizationService.Instance.PropertyChanged += (_, _) => UpdateNavLabels();
+    }
+
+    private static readonly Dictionary<string, string> _navKeyMap = new()
+    {
+        ["DashboardView"] = "Nav_Dashboard",
+        ["ControllerListView"] = "Nav_Controllers",
+        ["ControllerDetailView"] = "Nav_Details",
+        ["DeviceInfoView"] = "Nav_DeviceInfo",
+        ["BatteryView"] = "Nav_Battery",
+        ["RGBView"] = "Nav_RGB",
+        ["OverlaySettingsView"] = "Nav_Overlay",
+        ["SettingsView"] = "Nav_Settings",
+    };
+
+    private void UpdateNavLabels()
+    {
+        var loc = LocalizationService.Instance;
+        foreach (var item in NavigationItems)
+        {
+            if (_navKeyMap.TryGetValue(item.ViewName, out var key))
+                item.Label = loc[key];
+        }
     }
 
     partial void OnIsSidebarExpandedChanged(bool value)
@@ -101,7 +126,10 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private async Task ScanControllers()
     {
-        await _controllerManager.ScanForControllersAsync();
+        if (_isScanning) return;
+        _isScanning = true;
+        try { await _controllerManager.ScanForControllersAsync(); }
+        finally { _isScanning = false; }
     }
 
     [RelayCommand]
@@ -109,6 +137,32 @@ public partial class MainViewModel : ObservableObject
     {
         _themeService.ToggleTheme();
         IsDarkTheme = _themeService.IsDarkTheme;
+    }
+
+    [RelayCommand]
+    private void ToggleSidebar()
+    {
+        IsSidebarExpanded = !IsSidebarExpanded;
+    }
+
+    [RelayCommand]
+    private void GoBack()
+    {
+        _navigation.GoBack();
+        SyncSelectedItem();
+    }
+
+    [RelayCommand]
+    private void GoForward()
+    {
+        _navigation.GoForward();
+        SyncSelectedItem();
+    }
+
+    private void SyncSelectedItem()
+    {
+        var name = _navigation.CurrentViewName;
+        SelectedItem = NavigationItems.FirstOrDefault(n => n.ViewName == name);
     }
 
     private static bool IsControllerVisible(ControllerInfo c) =>
@@ -145,12 +199,13 @@ public partial class MainViewModel : ObservableObject
             };
             Notifications.Add(notification);
 
-            _ = _overlayManager.Client.SendAsync(new DeviceConnectedEvent
+            _overlay.NotifyConnection(new EstadoConexion
             {
-                DeviceId = e.Id,
-                Name = e.EffectiveName,
-                BatteryLevel = e.BatteryLevel,
-                IsCharging = e.IsCharging
+                Conectado = true,
+                IdMando = e.Id,
+                NombreMando = e.EffectiveName,
+                Bateria = e.BatteryLevel,
+                Cargando = e.IsCharging
             });
         });
     }
@@ -172,17 +227,13 @@ public partial class MainViewModel : ObservableObject
             };
             Notifications.Add(notification);
 
-            _ = _overlayManager.Client.SendAsync(new DeviceDisconnectedEvent
+            _overlay.NotifyConnection(new EstadoConexion
             {
-                DeviceId = e.Id,
-                Name = e.EffectiveName
+                Conectado = false,
+                IdMando = e.Id,
+                NombreMando = e.EffectiveName
             });
         });
-    }
-
-    private void OnControllerListChanged(object? sender, ControllerInfo e)
-    {
-        System.Windows.Application.Current.Dispatcher.Invoke(RefreshBattery);
     }
 
     private void CleanupNotifications()
@@ -242,36 +293,38 @@ public partial class MainViewModel : ObservableObject
             }
         }
 
-        _ = SendHudUpdateAsync(visible);
+        SendHudUpdateAsync(visible);
     }
 
-    private async Task SendHudUpdateAsync(List<ControllerInfo> visible)
+    private void SendHudUpdateAsync(List<ControllerInfo> visible)
     {
         try
         {
-            var hudEvent = new HudUpdateEvent
+            var hudEvent = new InformeMandos
             {
-                Controllers = visible.Select(c => new HudControllerData
+                Lista = visible.Select(c => new InfoMando
                 {
-                    DeviceId = c.Id,
-                    Name = c.EffectiveName,
-                    BatteryLevel = c.BatteryLevel,
-                    IsCharging = c.IsCharging,
-                    IsConnected = c.IsConnected,
-                    LatencyMs = c.LatencyMs,
-                    PollingRateHz = c.PollingRateHz,
-                    ProfileName = string.IsNullOrEmpty(c.AssignedProfileId) ? null : c.AssignedProfileId
+                    Id = c.Id,
+                    Nombre = c.EffectiveName,
+                    NivelBateria = c.BatteryLevel,
+                    Cargando = c.IsCharging,
+                    Conectado = c.IsConnected,
+                    LatenciaMs = c.LatencyMs,
+                    Hz = c.PollingRateHz,
+                    PerfilActivo = string.IsNullOrEmpty(c.AssignedProfileId) ? null : c.AssignedProfileId,
+                    TipoMando = c.Type.ToString()
                 }).ToList()
             };
-            await _overlayManager.Client.SendAsync(hudEvent);
+            _overlay.UpdateHud(hudEvent);
         }
         catch { }
     }
 }
 
-public class NavigationItem
+public partial class NavigationItem : ObservableObject
 {
-    public string Label { get; set; } = string.Empty;
+    [ObservableProperty]
+    private string _label = string.Empty;
     public Geometry? Icon { get; set; }
     public string ViewName { get; set; } = string.Empty;
 }
@@ -301,7 +354,11 @@ public class SidebarBatteryItem : ObservableObject
     public bool IsCharging
     {
         get => _isCharging;
-        set => SetProperty(ref _isCharging, value);
+        set
+        {
+            if (SetProperty(ref _isCharging, value))
+                OnPropertyChanged(nameof(BatteryIconKey));
+        }
     }
 
     public string BatteryText => Level >= 0 ? $"{Level}%" : "--";

@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:NovaPad.WPF.ViewModels"
              xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+             xmlns:services="clr-namespace:NovaPad.WPF.Services"
              mc:Ignorable="d"
              Background="{DynamicResource BackgroundBrush}"
              d:DataContext="{d:DesignInstance vm:ControllerDetailViewModel}">
@@ -12,10 +13,11 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Header (always visible) -->
+        <!-- Header -->
         <Border Grid.Row="0" Style="{StaticResource CardStyle}" Margin="16,16,16,0" Padding="16">
             <StackPanel>
                 <Grid>
@@ -34,7 +36,8 @@
                     </Border>
 
                     <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="MANDO" FontSize="11"
+                        <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Detail_Controller]}"
+                                   FontSize="11"
                                    Foreground="{DynamicResource TextDisabledBrush}"/>
                         <ComboBox ItemsSource="{Binding ConnectedControllers}"
                                   SelectedItem="{Binding SelectedController, Mode=TwoWay}"
@@ -52,7 +55,8 @@
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="Lat: " FontSize="11"
+                                <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Detail_Latency]}"
+                                           FontSize="11"
                                            Foreground="{DynamicResource TextSecondaryBrush}"
                                            VerticalAlignment="Center"/>
                                 <TextBlock Grid.Column="1" Text="{Binding Latency}"
@@ -70,7 +74,8 @@
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="Poll: " FontSize="11"
+                                <TextBlock Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Detail_Polling]}"
+                                           FontSize="11"
                                            Foreground="{DynamicResource TextSecondaryBrush}"
                                            VerticalAlignment="Center"/>
                                 <TextBlock Grid.Column="1" Text="{Binding PollingRate}"
@@ -84,12 +89,28 @@
             </StackPanel>
         </Border>
 
-        <ScrollViewer Grid.Row="1" Style="{StaticResource ModernScrollViewer}" Margin="16,0,16,16">
-            <StackPanel>
-                <!-- WebView2 Gamepad Tester -->
-                <wv2:WebView2 x:Name="GamepadWebView" Margin="0,16,0,0"
-                              Height="300" VerticalAlignment="Stretch"/>
+        <!-- Tab selector -->
+        <Border Grid.Row="1" Margin="16,12,16,0" Background="Transparent">
+            <StackPanel Orientation="Horizontal">
+                <RadioButton x:Name="InfoTab" GroupName="DetailViewTab"
+                             IsChecked="{Binding IsInfoView, Mode=TwoWay}"
+                             Style="{StaticResource TabRadioStyle}"
+                             Content="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Detail_Online]}"/>
+                <RadioButton x:Name="GamepadDosTab" GroupName="DetailViewTab"
+                             IsChecked="{Binding IsGamepadView2, Mode=TwoWay}"
+                             Style="{StaticResource TabRadioStyle}"
+                             Content="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Detail_Local]}"/>
             </StackPanel>
-        </ScrollViewer>
+        </Border>
+
+        <!-- Online tab (e7d.io) -->
+        <wv2:WebView2 Grid.Row="2" x:Name="OnlineWebView"
+                      Margin="16,12,16,16"
+                      Visibility="{Binding IsInfoView, Converter={StaticResource BoolToVis}}"/>
+
+        <!-- Local tab (PS layout) -->
+        <wv2:WebView2 Grid.Row="2" x:Name="LocalDosWebView"
+                      Margin="16,12,16,16"
+                      Visibility="{Binding IsGamepadView2, Converter={StaticResource BoolToVis}}"/>
     </Grid>
 </UserControl>

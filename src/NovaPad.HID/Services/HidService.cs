@@ -2,6 +2,7 @@
 
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Management;
 using HidSharp;
 using NovaPad.Core.Enums;
 using NovaPad.Core.Models;
@@ -16,6 +17,9 @@ public class HidService : IDisposable
 
     private readonly ConcurrentDictionary<string, DeviceSession> _sessions = new();
     private CancellationTokenSource? _monitorCts;
+    private ManagementEventWatcher? _wmiWatcher;
+    private DateTime _lastWmiScan = DateTime.MinValue;
+    private readonly object _wmiLock = new();
     private bool _disposed;
 
     public IReadOnlyList<ControllerInfo> Devices =>
@@ -104,12 +108,38 @@ public class HidService : IDisposable
     {
         if (_monitorCts != null) return Task.CompletedTask;
         _monitorCts = new CancellationTokenSource();
-        _ = MonitorDevicesAsync(_monitorCts.Token);
+
+        try
+        {
+            _wmiWatcher = new ManagementEventWatcher(
+                "SELECT * FROM Win32_DeviceChangeEvent WHERE EventType = 2 OR EventType = 3");
+            _wmiWatcher.EventArrived += OnWmiDeviceChanged;
+            _wmiWatcher.Start();
+            Debug.WriteLine("[HidService] WMI device change watcher started.");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[HidService] WMI watcher failed to start: {ex.Message}");
+        }
+
+        _ = SafetyScanAsync(_monitorCts.Token);
         return Task.CompletedTask;
     }
 
     public Task StopAsync()
     {
+        if (_wmiWatcher != null)
+        {
+            try
+            {
+                _wmiWatcher.Stop();
+                _wmiWatcher.EventArrived -= OnWmiDeviceChanged;
+                _wmiWatcher.Dispose();
+            }
+            catch { }
+            _wmiWatcher = null;
+        }
+
         _monitorCts?.Cancel();
         _monitorCts = null;
         foreach (var session in _sessions.Values)
@@ -152,41 +182,68 @@ public class HidService : IDisposable
         return Task.FromResult(false);
     }
 
-    private async Task MonitorDevicesAsync(CancellationToken ct)
+    private void OnWmiDeviceChanged(object sender, EventArrivedEventArgs e)
     {
-        var known = new HashSet<string>();
+        var now = DateTime.UtcNow;
+        lock (_wmiLock)
+        {
+            if ((now - _lastWmiScan).TotalMilliseconds < 200)
+                return;
+            _lastWmiScan = now;
+        }
+
+        try
+        {
+            DiffScan();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[HidService] WMI diff scan failed: {ex.Message}");
+        }
+    }
+
+    private void DiffScan()
+    {
+        var current = DeviceList.Local.GetHidDevices()
+            .Where(IsGamepadDevice)
+            .ToDictionary(d => GetDeviceKey(d), d => d);
+
+        var known = _sessions.Keys.ToHashSet();
+
+        foreach (var key in known)
+        {
+            if (!current.ContainsKey(key))
+            {
+                if (_sessions.TryRemove(key, out var session))
+                {
+                    session.Cancel();
+                    session.Dispose();
+                    OnDeviceRemoved(session.Info);
+                }
+            }
+        }
+
+        foreach (var kvp in current)
+        {
+            if (!_sessions.ContainsKey(kvp.Key))
+            {
+                var device = kvp.Value;
+                var info = CreateControllerInfo(device);
+                _sessions[kvp.Key] = new DeviceSession(device, info);
+                _ = ReadLoopAsync(_sessions[kvp.Key], CancellationToken.None);
+                OnDeviceArrived(info);
+            }
+        }
+    }
+
+    private async Task SafetyScanAsync(CancellationToken ct)
+    {
         try
         {
             while (!ct.IsCancellationRequested)
             {
-                var current = DeviceList.Local.GetHidDevices()
-                    .Where(IsGamepadDevice)
-                    .ToDictionary(d => GetDeviceKey(d), d => d);
-
-                var arrived = current.Keys.Except(known).ToList();
-                var removed = known.Except(current.Keys).ToList();
-
-                foreach (var key in arrived)
-                {
-                    var device = current[key];
-                    var info = CreateControllerInfo(device);
-                    _sessions[key] = new DeviceSession(device, info);
-                    _ = ReadLoopAsync(_sessions[key], ct);
-                    OnDeviceArrived(info);
-                }
-
-                foreach (var key in removed)
-                {
-                    if (_sessions.TryRemove(key, out var session))
-                    {
-                        session.Cancel();
-                        session.Dispose();
-                        OnDeviceRemoved(session.Info);
-                    }
-                }
-
-                known = current.Keys.ToHashSet();
-                await Task.Delay(300, ct);
+                await Task.Delay(30_000, ct);
+                DiffScan();
             }
         }
         catch (TaskCanceledException) { }
@@ -317,6 +374,7 @@ public class HidService : IDisposable
             (0x1BAD, _) => true,
             (0x046D, _) => true,
             (0x28DE, _) => true,
+            (0x0E6F, _) => true,
             _ => false
         };
     }
@@ -376,6 +434,7 @@ public class HidService : IDisposable
             MaxFeatureReportLength = maxFeature,
             PollingRateHz = 250,
             HasBattery = !isXbox,
+            HasLed = type is ControllerType.DualSense or ControllerType.DualShock4,
             FirstSeen = DateTime.UtcNow,
             LastSeen = DateTime.UtcNow
         };
@@ -457,7 +516,8 @@ public class HidService : IDisposable
         0x0079 => "Generic",
         0x2563 => "Generic",
         0x12BD => "Joytech",
-        0x1BAD => "Harmonix",
+         0x1BAD => "Harmonix",
+         0x0E6F => "PDP / Gaminja",
         _ => "Generic Manufacturer"
     };
 

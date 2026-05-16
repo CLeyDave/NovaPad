@@ -6,7 +6,4 @@
     <AssemblyName>NovaPad.Core</AssemblyName>
     <RootNamespace>NovaPad.Core</RootNamespace>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-  </ItemGroup>
 </Project>

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Windows;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using NovaPad.Core.Interfaces;
@@ -72,15 +73,26 @@ public partial class DeviceInfoViewModel : ObservableObject
     public DeviceInfoViewModel(IControllerManagerService controllers)
     {
         _controllers = controllers;
-        _controllers.ControllerConnected += (_, _) => Sync();
-        _controllers.ControllerDisconnected += (_, _) => Sync();
+        _controllers.ControllerConnected += OnControllerEvent;
+        _controllers.ControllerDisconnected += OnControllerEvent;
         _controllers.InputReceived += OnInput;
 
         _poll = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
-        _poll.Tick += (_, _) => Sync();
+        _poll.Tick += OnPollTick;
         _poll.Start();
 
         Sync();
+    }
+
+    private void OnControllerEvent(object? sender, ControllerInfo e) => DispatchSync();
+    private void OnPollTick(object? sender, EventArgs e) => DispatchSync();
+
+    private void DispatchSync()
+    {
+        if (Application.Current?.Dispatcher.CheckAccess() == false)
+            Application.Current.Dispatcher.Invoke(Sync);
+        else
+            Sync();
     }
 
     partial void OnCurrentChanged(ControllerInfo? value)
@@ -154,7 +166,7 @@ public partial class DeviceInfoViewModel : ObservableObject
 
     private void OnInput(object? sender, ControllerState s)
     {
-        App.Current.Dispatcher.Invoke(() =>
+        App.Current?.Dispatcher.Invoke(() =>
         {
             if (Current is null || s.ControllerId != Current.Id) return;
 

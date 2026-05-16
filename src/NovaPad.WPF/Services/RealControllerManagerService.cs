@@ -20,9 +20,7 @@ public class RealControllerManagerService : IControllerManagerService
     private readonly ConcurrentDictionary<string, ControllerState> _states = new();
     private readonly ConcurrentDictionary<string, PollingTracker> _polling = new();
     private readonly PeriodicTimer? _batteryTimer;
-    private readonly PeriodicTimer _scanTimer;
     private CancellationTokenSource? _batteryCts;
-    private CancellationTokenSource? _scanCts;
 
     public IReadOnlyList<ControllerInfo> ConnectedControllers =>
         _controllers.Values.Where(c => c.IsConnected).ToList().AsReadOnly();
@@ -37,51 +35,11 @@ public class RealControllerManagerService : IControllerManagerService
         _hidService.DeviceRemoved += OnDeviceRemoved;
         _hidService.InputReport += OnInputReport;
 
-        _scanCts = new CancellationTokenSource();
-        _scanTimer = new PeriodicTimer(TimeSpan.FromMilliseconds(300));
-        _ = ScanLoopAsync(_scanCts.Token);
-
         if (_battery.IsAvailable)
         {
             _batteryCts = new CancellationTokenSource();
             _batteryTimer = new PeriodicTimer(TimeSpan.FromSeconds(10));
             _ = PollBatteryAsync(_batteryCts.Token);
-        }
-    }
-
-    private async Task ScanLoopAsync(CancellationToken ct)
-    {
-        while (await _scanTimer.WaitForNextTickAsync(ct))
-        {
-            var current = _hidService.Devices.ToDictionary(d => d.Id);
-
-            foreach (var kvp in _controllers.Where(c => c.Value.IsConnected))
-            {
-                if (!current.ContainsKey(kvp.Key))
-                {
-                    kvp.Value.IsConnected = false;
-                    _states.TryRemove(kvp.Key, out _);
-                    ControllerDisconnected?.Invoke(this, kvp.Value);
-                }
-            }
-
-            foreach (var kvp in current)
-            {
-                if (!_controllers.ContainsKey(kvp.Key))
-                {
-                    var info = kvp.Value;
-                    ApplyCustomName(info);
-                    TryFillBattery(info);
-                    _controllers[kvp.Key] = info;
-                    _states[kvp.Key] = new ControllerState
-                    {
-                        ControllerId = info.Id,
-                        BatteryLevel = info.BatteryLevel,
-                        IsCharging = info.IsCharging
-                    };
-                    ControllerConnected?.Invoke(this, info);
-                }
-            }
         }
     }
 
@@ -138,7 +96,6 @@ public class RealControllerManagerService : IControllerManagerService
     public Task StopDetectionAsync()
     {
         _hidService.StopAsync();
-        _scanCts?.Cancel();
         _batteryCts?.Cancel();
         return Task.CompletedTask;
     }
@@ -196,17 +153,17 @@ public class RealControllerManagerService : IControllerManagerService
         }
     }
 
-    public Task<bool> DisconnectControllerAsync(string controllerId)
+    public async Task<bool> DisconnectControllerAsync(string controllerId)
     {
         if (_controllers.TryGetValue(controllerId, out var ctrl))
         {
-            _ = _hidService.DisconnectDeviceAsync(controllerId);
+            await _hidService.DisconnectDeviceAsync(controllerId);
             ctrl.IsConnected = false;
             _states.TryRemove(controllerId, out _);
             ControllerDisconnected?.Invoke(this, ctrl);
-            return Task.FromResult(true);
+            return true;
         }
-        return Task.FromResult(false);
+        return false;
     }
 
     private void ApplyCustomName(ControllerInfo info)

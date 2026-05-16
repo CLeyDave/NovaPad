@@ -51,15 +51,12 @@
                     </Grid.RowDefinitions>
 
                     <!-- Logo & Title -->
-                    <Border Grid.Row="0" Padding="20,20,20,16">
+                    <Border Grid.Row="0" Padding="20,20,20,16"
+                            Visibility="{Binding IsSidebarExpanded, Converter={StaticResource BoolToVis}}">
                         <StackPanel Orientation="Horizontal">
-                            <Border Width="36" Height="36" CornerRadius="10"
-                                    Background="{StaticResource AccentGradient}"
-                                    VerticalAlignment="Center">
-                                <TextBlock Text="N" FontSize="20" FontWeight="Bold"
-                                           Foreground="White" HorizontalAlignment="Center"
-                                           VerticalAlignment="Center"/>
-                            </Border>
+                            <Image Source="pack://application:,,,/NovaPadIcon.png"
+                                   Width="40" Height="40" Stretch="Uniform"
+                                   VerticalAlignment="Center"/>
                             <StackPanel Margin="12,0,0,0" VerticalAlignment="Center"
                                         Visibility="{Binding IsSidebarExpanded, Converter={StaticResource BoolToVis}}">
                                 <TextBlock Text="NovaPad" FontSize="18" FontWeight="Bold"
@@ -77,6 +74,7 @@
                              Background="Transparent" BorderThickness="0"
                              ItemContainerStyle="{StaticResource NavButtonStyle}"
                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             ScrollViewer.HorizontalScrollBarVisibility="Hidden"
                              Margin="0,8,0,0">
                         <ListBox.ItemTemplate>
                             <DataTemplate DataType="vm:NavigationItem">
@@ -107,7 +105,8 @@
 
                         <!-- Controllers Battery -->
                         <ItemsControl ItemsSource="{Binding BatteryItems}"
-                                      Margin="0,0,0,8">
+                                      Margin="0,0,0,8"
+                                      Visibility="{Binding IsSidebarExpanded, Converter={StaticResource BoolToVis}}">
                             <ItemsControl.ItemTemplate>
                                     <DataTemplate DataType="vm:SidebarBatteryItem">
                                         <Border Margin="16,2,16,2" Padding="8,4"
@@ -186,17 +185,49 @@
                         MouseLeftButtonDown="TitleBar_MouseDown">
                     <Grid>
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Column="0" Text="{Binding SelectedItem.Label}"
+                        <!-- Sidebar Toggle -->
+                        <Button Grid.Column="0" Command="{Binding ToggleSidebarCommand}"
+                                Width="40" Height="32"
+                                Style="{StaticResource WindowControlButtonStyle}">
+                            <Path Data="{StaticResource MenuIcon}"
+                                  Stroke="{DynamicResource TextSecondaryBrush}"
+                                  StrokeThickness="1.8" Fill="Transparent"
+                                  Stretch="Uniform" Width="18" Height="18"/>
+                        </Button>
+
+                        <!-- Back / Forward Navigation -->
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="4,0,12,0">
+                            <Button Command="{Binding GoBackCommand}"
+                                    Width="32" Height="32"
+                                    Style="{StaticResource WindowControlButtonStyle}">
+                                <Path Data="{StaticResource ChevronLeftIcon}"
+                                      Stroke="{DynamicResource TextSecondaryBrush}"
+                                      StrokeThickness="1.8" Fill="Transparent"
+                                      Stretch="Uniform" Width="14" Height="14"/>
+                            </Button>
+                            <Button Command="{Binding GoForwardCommand}"
+                                    Width="32" Height="32"
+                                    Style="{StaticResource WindowControlButtonStyle}">
+                                <Path Data="{StaticResource ChevronRightIcon}"
+                                      Stroke="{DynamicResource TextSecondaryBrush}"
+                                      StrokeThickness="1.8" Fill="Transparent"
+                                      Stretch="Uniform" Width="14" Height="14"/>
+                            </Button>
+                        </StackPanel>
+
+                        <TextBlock Grid.Column="2" Text="{Binding SelectedItem.Label}"
                                    FontSize="16" FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextPrimaryBrush}"
-                                   VerticalAlignment="Center" Margin="20,0,0,0"/>
+                                   VerticalAlignment="Center" Margin="0,0,0,0"/>
 
                         <!-- Window Controls -->
-                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <StackPanel Grid.Column="3" Orientation="Horizontal">
                             <Button x:Name="MinimizeButton" Click="MinimizeClick"
                                     Width="46" Height="32"
                                     Style="{StaticResource WindowControlButtonStyle}">
@@ -253,7 +284,7 @@
                                     MinWidth="280" MaxWidth="360"
                                     RenderTransformOrigin="0.5,0.5">
                                 <Border.RenderTransform>
-                                    <TranslateTransform/>
+                                    <TranslateTransform X="400"/>
                                 </Border.RenderTransform>
                                 <Grid>
                                     <Grid.RowDefinitions>
@@ -298,7 +329,6 @@
 
             <!-- Tray Icon (not rendered visually) -->
             <tb:TaskbarIcon x:Name="TrayIcon"
-                            IconSource="pack://application:,,,/icon.ico"
                             ToolTipText="NovaPad"
                             Visibility="Collapsed"
                             TrayMouseDoubleClick="ShowWindowFromTray">

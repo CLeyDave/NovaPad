@@ -1,24 +1,24 @@
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using NovaPad.Core.Interfaces;
 using NovaPad.Core.Models;
+using Serilog;
 
 namespace NovaPad.WPF.Services;
 
 public class AppSettingsService : IAppSettingsService
 {
     private readonly string _filePath;
+    private readonly string _dir;
     private AppSettings _settings = new();
 
     public AppSettings Settings => _settings;
 
     public AppSettingsService()
     {
-        var dir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "NovaPad");
-        Directory.CreateDirectory(dir);
-        _filePath = Path.Combine(dir, "settings.json");
+        _dir = AppContext.BaseDirectory;
+        _filePath = Path.Combine(_dir, "settings.json");
     }
 
     public void Load()
@@ -29,10 +29,16 @@ public class AppSettingsService : IAppSettingsService
             {
                 var json = File.ReadAllText(_filePath);
                 _settings = JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+                Log.Information("[AppSettings] Loaded from {Path}", _filePath);
+            }
+            else
+            {
+                Log.Information("[AppSettings] No settings file at {Path}, using defaults", _filePath);
             }
         }
-        catch
+        catch (Exception ex)
         {
+            Log.Warning(ex, "[AppSettings] Failed to load, using defaults");
             _settings = new AppSettings();
         }
     }
@@ -41,9 +47,17 @@ public class AppSettingsService : IAppSettingsService
     {
         try
         {
-            var json = JsonSerializer.Serialize(_settings, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(_filePath, json);
+            Directory.CreateDirectory(_dir);
+            var json = JsonSerializer.Serialize(_settings, new JsonSerializerOptions { WriteIndented = true, NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals });
+            var tmp = _filePath + ".tmp";
+            File.WriteAllText(tmp, json);
+            if (File.Exists(_filePath)) File.Replace(tmp, _filePath, null);
+            else File.Move(tmp, _filePath);
+            Log.Information("[AppSettings] Saved to {Path}", _filePath);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "[AppSettings] Failed to save");
+        }
     }
 }

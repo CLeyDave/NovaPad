@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:NovaPad.WPF.ViewModels"
+             xmlns:services="clr-namespace:NovaPad.WPF.Services"
              mc:Ignorable="d"
              Background="{DynamicResource BackgroundBrush}"
              d:DataContext="{d:DesignInstance vm:ControllerListViewModel}">
@@ -15,7 +16,8 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="Mandos Conectados"
+                <TextBlock Grid.Column="0"
+                           Text="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Controllers_Title]}"
                            Style="{StaticResource SectionTitleStyle}" VerticalAlignment="Center"/>
 
             </Grid>
@@ -46,10 +48,23 @@
                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
 
-                                <!-- Name, Type, Connection -->
+                                <!-- Name, Type, Connection + Inline Rename -->
                                 <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                                    <!-- Display name -->
                                     <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold"
-                                               Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                               Visibility="{Binding IsNotEditing, Converter={StaticResource BoolToVis}}"/>
+                                    <!-- Edit name TextBox -->
+                                    <TextBox Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}"
+                                             FontSize="14" FontWeight="SemiBold"
+                                             Foreground="{DynamicResource TextPrimaryBrush}"
+                                             Background="{DynamicResource SurfaceAltBrush}"
+                                             BorderBrush="{StaticResource PrimaryBrush}"
+                                             BorderThickness="1"
+                                             Padding="4,2"
+                                             MinWidth="120"
+                                             Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}"
+                                             KeyDown="OnRenameTextBoxKeyDown"/>
                                     <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                                         <TextBlock Text="{Binding Type}" FontSize="11"
                                                    Foreground="{DynamicResource TextSecondaryBrush}"/>
@@ -64,7 +79,7 @@
                                     </StackPanel>
                                 </StackPanel>
 
-                                <!-- Status Right -->
+                                <!-- Status Right + Actions -->
                                 <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
                                                 Visibility="{Binding HasBattery, Converter={StaticResource BoolToVis}}">
@@ -77,6 +92,46 @@
                                                    FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
                                                    Margin="4,0,0,0"/>
                                     </StackPanel>
+
+                                    <!-- Edit-mode buttons -->
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                                                Margin="0,4,0,0"
+                                                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}">
+                                          <Button Content="Guardar"
+                                                  Command="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.SaveRenameControllerCommand}"
+                                                  CommandParameter="{Binding}"
+                                                  Style="{StaticResource SmallActionButtonStyle}"
+                                                  Margin="0,0,4,0"
+                                                   Background="{StaticResource PrimaryBrush}"
+                                                   Foreground="White"/>
+                                          <Button Content="Cancelar"
+                                                   Command="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.CancelRenameControllerCommand}"
+                                                   CommandParameter="{Binding}"
+                                                   Style="{StaticResource SmallActionButtonStyle}"
+                                                   Background="{DynamicResource SurfaceAltBrush}"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    </StackPanel>
+
+                                    <!-- Default action buttons -->
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                                                Margin="0,4,0,0"
+                                                Visibility="{Binding IsNotEditing, Converter={StaticResource BoolToVis}}">
+                                          <Button Content="Renombrar"
+                                                  Command="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.RenameControllerCommand}"
+                                                  CommandParameter="{Binding}"
+                                                  Style="{StaticResource SmallActionButtonStyle}"
+                                                  Margin="0,0,4,0"
+                                                   Background="{DynamicResource SurfaceAltBrush}"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                          <Button Content="Desconectar"
+                                                  Command="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.DisconnectControllerCommand}"
+                                                  CommandParameter="{Binding}"
+                                                  Style="{StaticResource SmallActionButtonStyle}"
+                                                  Background="#44EF5350"
+                                                  Foreground="#EF5350"
+                                                  BorderThickness="1" BorderBrush="#44EF5350"/>
+                                    </StackPanel>
+
                                     <TextBlock Text="{Binding Latency}" FontSize="11"
                                                Foreground="{DynamicResource TextSecondaryBrush}"
                                                Margin="0,4,0,0" HorizontalAlignment="Right"/>
