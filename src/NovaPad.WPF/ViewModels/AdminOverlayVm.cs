@@ -113,6 +113,8 @@ public partial class AdminOverlayVm : ObservableObject
         _overlay = overlay;
         _controllers = controllers;
         _inputProcessing = inputProcessing;
+        _isRunning = _overlay.IsActive;
+        RefreshStatus();
         _controllers.ControllerConnected += (_, _) => RefrescarOpciones();
         _controllers.ControllerDisconnected += (_, _) => RefrescarOpciones();
         RefrescarOpciones();
@@ -275,6 +277,12 @@ public partial class AdminOverlayVm : ObservableObject
     [RelayCommand] private void SetAccentColor(string hex) => Accent = hex;
     [RelayCommand] private void SetBgColor(string hex) => Bg = hex;
     [RelayCommand] private void TestAlert() => _overlay.ShowNotification("Notificacion", "Esto es una prueba");
+
+    public void UpdateRunningState(bool isRunning)
+    {
+        _isRunning = isRunning;
+        RefreshStatus();
+    }
 
     [RelayCommand]
     private void StartLayer()
