@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Reflection;
 using System.Windows.Media;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -19,6 +20,7 @@ public partial class MainViewModel : ObservableObject
     private readonly IControllerManagerService _controllerManager;
     private readonly INotificationService _notificationService;
     private readonly IOverlayService _overlay;
+    private readonly AdminOverlayVm _overlayVm;
     private readonly DispatcherTimer _batteryTimer;
     private readonly DispatcherTimer _notificationCleanupTimer;
     private bool _isScanning;
@@ -40,7 +42,7 @@ public partial class MainViewModel : ObservableObject
 
     public ObservableCollection<NavigationItem> NavigationItems { get; } = new();
 
-    public MainViewModel(INavigationService navigation, IThemeService themeService, IAppSettingsService settings, IControllerManagerService controllerManager, INotificationService notificationService, IOverlayService overlay)
+    public MainViewModel(INavigationService navigation, IThemeService themeService, IAppSettingsService settings, IControllerManagerService controllerManager, INotificationService notificationService, IOverlayService overlay, AdminOverlayVm overlayVm)
     {
         _navigation = navigation;
         _themeService = themeService;
@@ -48,6 +50,7 @@ public partial class MainViewModel : ObservableObject
         _controllerManager = controllerManager;
         _notificationService = notificationService;
         _overlay = overlay;
+        _overlayVm = overlayVm;
 
         _isSidebarExpanded = _settings.Settings.Window.SidebarExpanded;
         _isDarkTheme = _themeService.IsDarkTheme;
@@ -72,15 +75,20 @@ public partial class MainViewModel : ObservableObject
 
         RefreshBattery();
 
+        _notificationService.NotificationReceived += (_, notification) =>
+        {
+            System.Windows.Application.Current.Dispatcher.Invoke(() => Notifications.Add(notification));
+        };
+
         var loc = LocalizationService.Instance;
-        NavigationItems.Add(new NavigationItem { Label = loc["Nav_Dashboard"], Icon = G("HomeIcon"), ViewName = "DashboardView" });
-        NavigationItems.Add(new NavigationItem { Label = loc["Nav_Controllers"], Icon = G("GamepadIcon"), ViewName = "ControllerListView" });
-        NavigationItems.Add(new NavigationItem { Label = loc["Nav_Details"], Icon = G("InfoIcon"), ViewName = "ControllerDetailView" });
-        NavigationItems.Add(new NavigationItem { Label = loc["Nav_DeviceInfo"], Icon = G("ActivityIcon"), ViewName = "DeviceInfoView" });
-        NavigationItems.Add(new NavigationItem { Label = loc["Nav_Battery"], Icon = G("BatteryFullIcon"), ViewName = "BatteryView" });
-        NavigationItems.Add(new NavigationItem { Label = loc["Nav_RGB"], Icon = G("PaletteIcon"), ViewName = "RGBView" });
+        NavigationItems.Add(new NavigationItem { Label = loc["Nav_Dashboard"], Icon = G("HomeIcon"), ViewName = nameof(DashboardView) });
+        NavigationItems.Add(new NavigationItem { Label = loc["Nav_Controllers"], Icon = G("GamepadIcon"), ViewName = nameof(ControllerListView) });
+        NavigationItems.Add(new NavigationItem { Label = loc["Nav_Details"], Icon = G("InfoIcon"), ViewName = nameof(ControllerDetailView) });
+        NavigationItems.Add(new NavigationItem { Label = loc["Nav_DeviceInfo"], Icon = G("ActivityIcon"), ViewName = nameof(DeviceInfoView) });
+        NavigationItems.Add(new NavigationItem { Label = loc["Nav_Battery"], Icon = G("BatteryFullIcon"), ViewName = nameof(BatteryView) });
+        NavigationItems.Add(new NavigationItem { Label = loc["Nav_RGB"], Icon = G("PaletteIcon"), ViewName = nameof(RGBView) });
         NavigationItems.Add(new NavigationItem { Label = loc["Nav_Overlay"], Icon = G("LayersIcon"), ViewName = "OverlaySettingsView" });
-        NavigationItems.Add(new NavigationItem { Label = loc["Nav_Settings"], Icon = G("SettingsIcon"), ViewName = "SettingsView" });
+        NavigationItems.Add(new NavigationItem { Label = loc["Nav_Settings"], Icon = G("SettingsIcon"), ViewName = nameof(SettingsView) });
 
         SelectedItem = NavigationItems[0];
 
@@ -120,6 +128,17 @@ public partial class MainViewModel : ObservableObject
         if (value != null)
         {
             _navigation.NavigateTo(value.ViewName);
+        }
+    }
+
+    public AdminOverlayVm OverlayVm => _overlayVm;
+
+    public string AppVersion
+    {
+        get
+        {
+            var v = Assembly.GetExecutingAssembly().GetName().Version;
+            return v != null ? $"v{v.Major}.{v.Minor}.{v.Build}" : "v1.0.0";
         }
     }
 
@@ -176,7 +195,7 @@ public partial class MainViewModel : ObservableObject
         return Notifications.Any(n =>
             n.Title == title
             && n.Message.StartsWith(controllerId)
-            && (DateTime.Now - n.Timestamp).TotalSeconds < 4);
+            && (DateTime.UtcNow - n.Timestamp).TotalSeconds < 4);
     }
 
     private void OnControllerConnected(object? sender, ControllerInfo e)
@@ -239,7 +258,7 @@ public partial class MainViewModel : ObservableObject
     private void CleanupNotifications()
     {
         var maxAge = _settings.Settings.Notifications.DurationSeconds + 2;
-        var expired = Notifications.Where(n => (DateTime.Now - n.Timestamp).TotalSeconds > maxAge).ToList();
+        var expired = Notifications.Where(n => (DateTime.UtcNow - n.Timestamp).TotalSeconds > maxAge).ToList();
         foreach (var n in expired) Notifications.Remove(n);
     }
 

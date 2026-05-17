@@ -90,7 +90,8 @@ public partial class App
                 .CreateLogger();
 
             Log.Information("=== NovaPad Launch ===");
-            Log.Information("Version: 3.1.3");
+            var asmVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            Log.Information("Version: {Ver}", asmVersion != null ? $"{asmVersion.Major}.{asmVersion.Minor}.{asmVersion.Build}" : "unknown");
             Log.Information("OS: {Os} | 64-bit: {Bits} | Runtime: {Runtime}",
                 Environment.OSVersion, Environment.Is64BitProcess, Environment.Version);
             Log.Information("CommandLine: {Cmd}", Environment.CommandLine);
@@ -156,7 +157,6 @@ public partial class App
 
             Log.Information("[{Elapsed}] Loading settings...", sw.Elapsed);
             settings.Load();
-            Log.Information("  AutoStartOverlay={Overlay}", settings.Settings.AutoStartOverlay);
 
             Log.Information("[{Elapsed}] Starting controller detection...", sw.Elapsed);
             await controllerService.StartDetectionAsync();
@@ -187,23 +187,6 @@ public partial class App
                                     saved.R, saved.G, saved.B, saved.R2, saved.G2, saved.B2);
                             }
                         }
-
-                        if (settings.Settings.AutoStartOverlay)
-                        {
-                            Log.Information("[Background] Starting overlay...");
-                            try
-                            {
-                                var overlayVm = _host.Services.GetRequiredService<AdminOverlayVm>();
-                                overlayVm.StartLayerCommand.Execute(null);
-                                Log.Information("[Background] Overlay auto-start completed, IsActive={Active}",
-                                    _host.Services.GetRequiredService<Core.Interfaces.IOverlayService>().IsActive);
-                            }
-                            catch (Exception exOv)
-                            {
-                                Log.Error(exOv, "[Background] Overlay auto-start failed");
-                            }
-                        }
-
                     });
 
                         // Check for updates at startup (background, no dispatcher needed for HTTP)
@@ -255,6 +238,27 @@ public partial class App
                         catch (Exception exUpd)
                         {
                             Log.Error(exUpd, "[Background] Update check error");
+                        }
+
+                        // Restore overlay auto-start
+                        if (settings.Settings.Overlay.Activado)
+                        {
+                            Log.Information("[Background] Restoring overlay (auto-start)...");
+                            try
+                            {
+                                var overlayTask = Task.CompletedTask;
+                                await Application.Current.Dispatcher.InvokeAsync(() =>
+                                {
+                                    var overlayVm = _host.Services.GetRequiredService<AdminOverlayVm>();
+                                    overlayTask = overlayVm.RestoreAsync();
+                                });
+                                await overlayTask;
+                                Log.Information("[Background] Overlay restored successfully");
+                            }
+                            catch (Exception exOv)
+                            {
+                                Log.Error(exOv, "[Background] Overlay auto-restore failed");
+                            }
                         }
                     }
                     catch (Exception ex)

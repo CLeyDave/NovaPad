@@ -22,7 +22,7 @@ public class AjustesOverlay
     public bool VerFps { get; set; }
     public bool VerReloj { get; set; } = true;
     public string Tema { get; set; } = "Dark";
-    public string Anclaje { get; set; } = "TopLeft";
+    public string Anclaje { get; set; } = "TopRight";
     public bool VerAvisos { get; set; } = true;
     public string AnclajeAvisos { get; set; } = "BottomRight";
     public double DesvioAvisoX { get; set; } = 20;

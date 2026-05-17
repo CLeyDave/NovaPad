@@ -15,6 +15,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly LocalizationService _localization;
     private readonly UpdateService _updater;
     private bool _loading;
+    private CancellationTokenSource? _saveCts;
 
     [ObservableProperty] private bool _startWithWindows;
     [ObservableProperty] private bool _minimizeToTray;
@@ -127,21 +128,31 @@ public partial class SettingsViewModel : ObservableObject
     partial void OnShowConnectionNotificationsChanged(bool value) { if (!_loading) AutoSave(); }
     partial void OnShowBatteryNotificationsChanged(bool value) { if (!_loading) AutoSave(); }
 
-    private void AutoSave()
+    private async void AutoSave()
     {
-        var s = _settings.Settings;
-        s.StartWithWindows = StartWithWindows;
-        s.MinimizeToTray = MinimizeToTray;
-        s.Theme.IsDark = Theme == "Oscuro";
+        _saveCts?.Cancel();
+        _saveCts = new CancellationTokenSource();
+        var token = _saveCts.Token;
 
-        s.Notifications.DurationSeconds = NotificationDuration;
-        s.Notifications.BatteryWarningThreshold = BatteryWarningThreshold;
-        s.Notifications.ShowConnectionNotifications = ShowConnectionNotifications;
-        s.Notifications.ShowBatteryNotifications = ShowBatteryNotifications;
+        try
+        {
+            await Task.Delay(500, token);
 
-        _settings.Save();
+            var s = _settings.Settings;
+            s.StartWithWindows = StartWithWindows;
+            s.MinimizeToTray = MinimizeToTray;
+            s.Theme.IsDark = Theme == "Oscuro";
 
-        SendSettingsAsync();
+            s.Notifications.DurationSeconds = NotificationDuration;
+            s.Notifications.BatteryWarningThreshold = BatteryWarningThreshold;
+            s.Notifications.ShowConnectionNotifications = ShowConnectionNotifications;
+            s.Notifications.ShowBatteryNotifications = ShowBatteryNotifications;
+
+            _settings.Save();
+
+            SendSettingsAsync();
+        }
+        catch (TaskCanceledException) { }
     }
 
     private void SendSettingsAsync()

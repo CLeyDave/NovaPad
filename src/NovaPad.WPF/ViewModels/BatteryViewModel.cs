@@ -93,7 +93,6 @@ public partial class BatteryItem : ObservableObject
             {
                 OnPropertyChanged(nameof(PercentText));
                 OnPropertyChanged(nameof(FillHeight));
-                OnPropertyChanged(nameof(IsCharging));
                 OnPropertyChanged(nameof(ChargingText));
                 OnPropertyChanged(nameof(FillColor));
                 OnPropertyChanged(nameof(BarColor));

@@ -19,6 +19,7 @@ public class HidService : IDisposable
     private CancellationTokenSource? _monitorCts;
     private ManagementEventWatcher? _wmiWatcher;
     private DateTime _lastWmiScan = DateTime.MinValue;
+    private DateTime _lastInputScan = DateTime.MinValue;
     private readonly object _wmiLock = new();
     private bool _disposed;
 
@@ -160,8 +161,9 @@ public class HidService : IDisposable
             var info = CreateControllerInfo(device);
             if (!_sessions.ContainsKey(info.Id))
             {
-                _sessions[info.Id] = new DeviceSession(device, info);
-                _ = ReadLoopAsync(_sessions[info.Id], CancellationToken.None);
+                var session = new DeviceSession(device, info);
+                _sessions[info.Id] = session;
+                _ = ReadLoopAsync(session, session.Token);
                 OnDeviceArrived(info);
             }
             infos.Add(info);
@@ -229,8 +231,9 @@ public class HidService : IDisposable
             {
                 var device = kvp.Value;
                 var info = CreateControllerInfo(device);
-                _sessions[kvp.Key] = new DeviceSession(device, info);
-                _ = ReadLoopAsync(_sessions[kvp.Key], CancellationToken.None);
+                var session = new DeviceSession(device, info);
+                _sessions[kvp.Key] = session;
+                _ = ReadLoopAsync(session, session.Token);
                 OnDeviceArrived(info);
             }
         }
@@ -242,7 +245,7 @@ public class HidService : IDisposable
         {
             while (!ct.IsCancellationRequested)
             {
-                await Task.Delay(30_000, ct);
+                await Task.Delay(300, ct);
                 DiffScan();
             }
         }
@@ -296,6 +299,13 @@ public class HidService : IDisposable
                     state.ControllerId = session.Info.Id;
                     state.Timestamp = DateTime.UtcNow;
                     InputReport?.Invoke(this, state);
+
+                    var now = DateTime.UtcNow;
+                    if ((now - _lastInputScan).TotalMilliseconds >= 300)
+                    {
+                        _lastInputScan = now;
+                        DiffScan();
+                    }
                 }
             }
         }
@@ -410,8 +420,6 @@ public class HidService : IDisposable
         var pid = (ushort)device.ProductID;
         var type = IdentifyControllerType(vid, pid);
         var connection = DetectConnectionType(device, type);
-        var isXbox = type is ControllerType.Xbox360 or ControllerType.XboxOne or ControllerType.XboxSeriesX;
-
         var maxInput = device.MaxInputReportLength;
         var maxFeature = device.MaxFeatureReportLength;
         Debug.WriteLine($"[HidService] DevicePath: {device.DevicePath}");
@@ -433,7 +441,7 @@ public class HidService : IDisposable
             MaxInputReportLength = maxInput,
             MaxFeatureReportLength = maxFeature,
             PollingRateHz = 250,
-            HasBattery = !isXbox,
+            HasBattery = true,
             HasLed = type is ControllerType.DualSense or ControllerType.DualShock4,
             FirstSeen = DateTime.UtcNow,
             LastSeen = DateTime.UtcNow
@@ -813,6 +821,7 @@ public class HidService : IDisposable
             _cts = new CancellationTokenSource();
         }
 
+        public CancellationToken Token => _cts?.Token ?? CancellationToken.None;
         public void Cancel() => _cts?.Cancel();
 
         public void Dispose()

@@ -55,7 +55,7 @@ public class LightingEngine : IDisposable
             Log.Debug("[LightingEngine] IsSupported({Id}): controller not found in ConnectedControllers", controllerId);
             return false;
         }
-        var supported = ctrl.HasLed || IsSonyController(ctrl.VendorId, ctrl.ProductId);
+        var supported = IsSonyController(ctrl.VendorId, ctrl.ProductId);
         Log.Debug("[LightingEngine] IsSupported({Id}): {Supported} (HasLed={HasLed}, VID={Vid}, PID={Pid})",
             controllerId, supported, ctrl.HasLed, ctrl.VendorId, ctrl.ProductId);
         return supported;
@@ -594,7 +594,7 @@ public class LightingEngine : IDisposable
             report[10] = 0x00;      // Left rumble
             report[21] = 0x00;      // Player LED mask
             report[22] = 0x00;      // Player LED brightness
-            report[31] = 0x00;      // Lightbar enable
+            report[31] = 0x01;      // Lightbar enable
             report[32] = 0x01;      // Lightbar extended enable
             report[41] = ctx.CurrentR;  // Lightbar R (newer firmware)
             report[42] = ctx.CurrentG;  // Lightbar G
@@ -607,12 +607,6 @@ public class LightingEngine : IDisposable
 
             stream.Write(report);
             Log.Debug("[LightingEngine] WriteColorToStream: DualSense HidSharp done for {Id}", ctx.ControllerId);
-
-            var rawOk = WriteRawReport(ctx, report);
-            Log.Debug("[LightingEngine] WriteColorToStream: DualSense P/Invoke WriteFile={Ok}", rawOk);
-
-            var ctrlOk = WriteReportViaControlPipe(ctx, report);
-            Log.Debug("[LightingEngine] WriteColorToStream: DualSense P/Invoke HidD_SetOutputReport={Ok}", ctrlOk);
         }
         else if (ctrl.VendorId == SonyVid && ctrl.ProductId >= DualShock4MinPid && ctrl.ProductId <= DualShock4MaxPid)
         {
@@ -671,12 +665,6 @@ public class LightingEngine : IDisposable
 
                 stream.Write(report);
                 Log.Debug("[LightingEngine] WriteColorToStream: HidSharp WriteFile done for {Id}", ctx.ControllerId);
-
-                var rawOk = WriteRawReport(ctx, report);
-                Log.Debug("[LightingEngine] WriteColorToStream: P/Invoke WriteFile={Ok} for {Id}", rawOk, ctx.ControllerId);
-
-                var ctrlOk = WriteReportViaControlPipe(ctx, report);
-                Log.Debug("[LightingEngine] WriteColorToStream: P/Invoke HidD_SetOutputReport={Ok} for {Id}", ctrlOk, ctx.ControllerId);
             }
         }
     }

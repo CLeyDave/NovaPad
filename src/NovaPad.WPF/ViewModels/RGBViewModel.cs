@@ -93,10 +93,6 @@ public partial class RGBViewModel : ObservableObject
         Refresh();
     }
 
-    private readonly Dictionary<string, byte> _savedR = new();
-    private readonly Dictionary<string, byte> _savedG = new();
-    private readonly Dictionary<string, byte> _savedB = new();
-
     partial void OnSelectedControllerChanged(ControllerInfo? value)
     {
         IsRgbSupported = value != null && _lighting.IsSupported(value.Id);

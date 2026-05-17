@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -46,6 +47,9 @@ public class VentanaFondo : Window, IOverlayService
     private bool _verTipo = true;
     private bool _verAvisos = true;
     private double _duracionAviso = 3.0;
+
+    private bool _initialized;
+    private TaskCompletionSource _readyTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     private const int WM_HOTKEY = 0x0312;
     private const int IdHotkey = 9001;
@@ -130,8 +134,8 @@ public class VentanaFondo : Window, IOverlayService
     protected override void OnContentRendered(EventArgs e)
     {
         base.OnContentRendered(e);
-        InicializarUI();
-        Log.Information("[VentanaFondo] UI inicializada");
+        EnsureInitialized();
+        Log.Information("[VentanaFondo] UI initialized");
     }
 
     private Canvas Lienzo => (Content as Canvas)!;
@@ -166,6 +170,35 @@ public class VentanaFondo : Window, IOverlayService
         _tickDepu.Start();
 
         CompositionTarget.Rendering += (_, _) => _frames++;
+    }
+
+    private void EnsureInitialized()
+    {
+        if (_initialized)
+            return;
+
+        InicializarUI();
+        _initialized = true;
+        _readyTcs.TrySetResult();
+    }
+
+    public async Task WaitUntilReadyAsync()
+    {
+        await Dispatcher.InvokeAsync(() => EnsureInitialized());
+
+        await _readyTcs.Task;
+    }
+
+    public void ResetReadyState()
+    {
+        _tickDepu.Stop();
+        Lienzo.Children.Clear();
+        _tarjetasPorId.Clear();
+        _depu = null!;
+        _panelEx = null!;
+        _avisos = null;
+        _readyTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        _initialized = false;
     }
 
     protected override void OnSourceInitialized(EventArgs e)
@@ -207,7 +240,7 @@ public class VentanaFondo : Window, IOverlayService
     {
         var helper = new WindowInteropHelper(this);
         UnregisterHotKey(helper.Handle, IdHotkey);
-        _panelEx.Detener();
+        _panelEx?.Detener();
         _tickDepu.Stop();
         Log.Information("[VentanaFondo] Ventana cerrada");
         base.OnClosed(e);
@@ -242,7 +275,8 @@ public class VentanaFondo : Window, IOverlayService
         _verTipo = cfg.VerTipo;
         _verAvisos = cfg.VerAvisos;
 
-        _depu.Vista.Visibility = _verFps ? Visibility.Visible : Visibility.Collapsed;
+        if (_depu != null)
+            _depu.Vista.Visibility = _verFps ? Visibility.Visible : Visibility.Collapsed;
 
         _anclajeAvisos = cfg.AnclajeAvisos;
         _desvioAvisoX = cfg.DesvioAvisoX;
@@ -256,7 +290,7 @@ public class VentanaFondo : Window, IOverlayService
             _avisos?.CambiarEstilo(_estiloAviso, _acentoHex);
         }
 
-        _panelEx.CambiarAcento(_acentoHex, cfg.ColorFondo);
+        _panelEx?.CambiarAcento(_acentoHex, cfg.ColorFondo);
 
         if (Enum.TryParse<EstiloTarjeta>(cfg.EstiloTarjeta, true, out var parsedEstilo))
         {

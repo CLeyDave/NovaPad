@@ -67,7 +67,12 @@ public class InputProcessingService : IInputProcessingService
 
     public void SetDeadZone(string controllerId, double leftStick, double rightStick, double leftTrigger, double rightTrigger)
     {
-        var cfg = ObtenerConfig(controllerId);
+        var dict = _settings.Settings.InputProcessing;
+        if (!dict.TryGetValue(controllerId, out var cfg))
+        {
+            cfg = new InputProcessingConfig();
+            dict[controllerId] = cfg;
+        }
         cfg.LeftStickDeadZone = leftStick;
         cfg.RightStickDeadZone = rightStick;
         cfg.LeftTriggerDeadZone = leftTrigger;
@@ -77,7 +82,12 @@ public class InputProcessingService : IInputProcessingService
 
     public void SetStickCurve(string controllerId, string leftCurve, string rightCurve)
     {
-        var cfg = ObtenerConfig(controllerId);
+        var dict = _settings.Settings.InputProcessing;
+        if (!dict.TryGetValue(controllerId, out var cfg))
+        {
+            cfg = new InputProcessingConfig();
+            dict[controllerId] = cfg;
+        }
         cfg.LeftStickCurve = leftCurve;
         cfg.RightStickCurve = rightCurve;
         _settings.Save();
@@ -85,7 +95,12 @@ public class InputProcessingService : IInputProcessingService
 
     public void SetInversion(string controllerId, bool invertLeftX, bool invertLeftY, bool invertRightX, bool invertRightY)
     {
-        var cfg = ObtenerConfig(controllerId);
+        var dict = _settings.Settings.InputProcessing;
+        if (!dict.TryGetValue(controllerId, out var cfg))
+        {
+            cfg = new InputProcessingConfig();
+            dict[controllerId] = cfg;
+        }
         cfg.InvertLeftX = invertLeftX;
         cfg.InvertLeftY = invertLeftY;
         cfg.InvertRightX = invertRightX;
@@ -96,12 +111,10 @@ public class InputProcessingService : IInputProcessingService
     private InputProcessingConfig ObtenerConfig(string controllerId)
     {
         var dict = _settings.Settings.InputProcessing;
-        if (!dict.TryGetValue(controllerId, out var cfg))
-        {
-            cfg = new InputProcessingConfig();
-            dict[controllerId] = cfg;
-        }
-        return cfg;
+        if (dict.TryGetValue(controllerId, out var cfg))
+            return cfg;
+
+        return new InputProcessingConfig();
     }
 
     private static double ProcessStickAxis(double value, double deadZone, double sensitivity, string curve, bool invert)

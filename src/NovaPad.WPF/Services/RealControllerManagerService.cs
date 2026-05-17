@@ -3,6 +3,7 @@ using NovaPad.Core.Enums;
 using NovaPad.Core.Interfaces;
 using NovaPad.Core.Models;
 using NovaPad.HID.Services;
+using Serilog;
 
 namespace NovaPad.WPF.Services;
 
@@ -21,9 +22,21 @@ public class RealControllerManagerService : IControllerManagerService
     private readonly ConcurrentDictionary<string, PollingTracker> _polling = new();
     private readonly PeriodicTimer? _batteryTimer;
     private CancellationTokenSource? _batteryCts;
+    private IReadOnlyList<ControllerInfo>? _cachedConnected;
+    private bool _cacheDirty = true;
 
-    public IReadOnlyList<ControllerInfo> ConnectedControllers =>
-        _controllers.Values.Where(c => c.IsConnected).ToList().AsReadOnly();
+    public IReadOnlyList<ControllerInfo> ConnectedControllers
+    {
+        get
+        {
+            if (_cacheDirty || _cachedConnected == null)
+            {
+                _cachedConnected = _controllers.Values.Where(c => c.IsConnected).ToList().AsReadOnly();
+                _cacheDirty = false;
+            }
+            return _cachedConnected;
+        }
+    }
 
     public RealControllerManagerService(IControllerNamingService naming, IBatteryService battery)
     {
@@ -89,7 +102,11 @@ public class RealControllerManagerService : IControllerManagerService
 
     public Task StartDetectionAsync()
     {
-        _ = _hidService.StartAsync();
+        _ = _hidService.StartAsync().ContinueWith(t =>
+        {
+            if (t.IsFaulted)
+                Log.Error(t.Exception, "[RealControllerManagerService] HidService.StartAsync failed");
+        }, TaskContinuationOptions.OnlyOnFaulted);
         return Task.CompletedTask;
     }
 
@@ -115,6 +132,7 @@ public class RealControllerManagerService : IControllerManagerService
                 IsCharging = device.IsCharging
             };
         }
+        _cacheDirty = true;
         return ConnectedControllers;
     }
 
@@ -160,6 +178,7 @@ public class RealControllerManagerService : IControllerManagerService
             await _hidService.DisconnectDeviceAsync(controllerId);
             ctrl.IsConnected = false;
             _states.TryRemove(controllerId, out _);
+            _cacheDirty = true;
             ControllerDisconnected?.Invoke(this, ctrl);
             return true;
         }
@@ -212,6 +231,7 @@ public class RealControllerManagerService : IControllerManagerService
             BatteryLevel = info.BatteryLevel,
             IsCharging = info.IsCharging
         };
+        _cacheDirty = true;
         ControllerConnected?.Invoke(this, info);
     }
 
@@ -221,6 +241,7 @@ public class RealControllerManagerService : IControllerManagerService
         {
             ctrl.IsConnected = false;
             _states.TryRemove(info.Id, out _);
+            _cacheDirty = true;
             ControllerDisconnected?.Invoke(this, ctrl);
         }
     }
