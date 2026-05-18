@@ -41,6 +41,9 @@ public class UpdateService : INotifyPropertyChanged
     private const string Owner = "CleyDave";
     private const string Repo = "NovaPad";
     private const string ApiUrl = $"https://api.github.com/repos/{Owner}/{Repo}/releases/latest";
+    private static readonly string DownloadDir = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "NovaPad", "Updates");
 
     private readonly HttpClient _http;
     private string _currentVersion;
@@ -162,8 +165,10 @@ public class UpdateService : INotifyPropertyChanged
             return;
         }
 
-        var asset = LatestRelease.Assets[0];
-        var downloadPath = Path.Combine(Path.GetTempPath(), "NovaPad_Setup.exe");
+        var asset = LatestRelease.Assets.FirstOrDefault(a => a.Name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                   ?? LatestRelease.Assets[0];
+        Directory.CreateDirectory(DownloadDir);
+        var downloadPath = Path.Combine(DownloadDir, $"NovaPad_Setup_{LatestRelease.TagName}.exe");
 
         Status = UpdateStatus.Downloading;
 
@@ -198,7 +203,8 @@ public class UpdateService : INotifyPropertyChanged
 
     public void InstallUpdate()
     {
-        var downloadPath = Path.Combine(Path.GetTempPath(), "NovaPad_Setup.exe");
+        var tag = LatestRelease?.TagName ?? "latest";
+        var downloadPath = Path.Combine(DownloadDir, $"NovaPad_Setup_{tag}.exe");
         if (!File.Exists(downloadPath))
         {
             Status = UpdateStatus.Error;
@@ -208,12 +214,14 @@ public class UpdateService : INotifyPropertyChanged
 
         try
         {
-            Process.Start(new ProcessStartInfo
+            var psi = new ProcessStartInfo
             {
                 FileName = downloadPath,
                 Arguments = "/VERYSILENT /SUPPRESSMSGBOXES",
-                UseShellExecute = true
-            });
+                UseShellExecute = true,
+                WorkingDirectory = DownloadDir
+            };
+            Process.Start(psi);
             Application.Current.Shutdown();
         }
         catch (Exception ex)
