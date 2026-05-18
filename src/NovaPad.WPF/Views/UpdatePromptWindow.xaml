@@ -4,31 +4,164 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Actualizacion disponible"
-        Height="220" Width="460"
+        Title="Actualización disponible"
+        Height="280" Width="480"
         WindowStartupLocation="CenterScreen"
-        WindowStyle="SingleBorderWindow"
+        WindowStyle="None"
         ResizeMode="NoResize"
         ShowInTaskbar="True"
         FontFamily="Segoe UI"
         TextOptions.TextFormattingMode="Display"
-        FontSize="14">
-    <Window.Resources>
-        <Style TargetType="Button">
-            <Setter Property="Padding" Value="16,8"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Margin" Value="0,0,8,0"/>
-        </Style>
-    </Window.Resources>
-    <StackPanel Margin="24,20,24,20">
-        <TextBlock Text="Nueva version disponible" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,6"/>
-        <TextBlock x:Name="VersionText" Text="NovaPad X.X.X esta disponible." FontSize="14" Foreground="#666" Margin="0,0,0,18"/>
-        <TextBlock Text="Que deseas hacer?" FontSize="14" Foreground="#666" Margin="0,0,0,20"/>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <Button x:Name="BtnDownloadInstall" Content="Descargar e instalar" Click="BtnDownloadInstall_Click" IsDefault="True" Width="180"/>
-            <Button x:Name="BtnDownload" Content="Solo descargar" Click="BtnDownload_Click" Width="130"/>
-            <Button x:Name="BtnLater" Content="Mas tarde" Click="BtnLater_Click" Width="100"/>
-        </StackPanel>
-    </StackPanel>
+        FontSize="14"
+        Background="{DynamicResource SurfaceBrush}">
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="0"
+                      ResizeBorderThickness="0"
+                      GlassFrameThickness="0"
+                      UseAeroCaptionButtons="False"
+                      CornerRadius="0"/>
+    </WindowChrome.WindowChrome>
+
+    <Border Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            Effect="{StaticResource WindowShadow}"
+            Padding="32,28">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Close button -->
+            <Button Grid.Row="0" Width="28" Height="28"
+                    HorizontalAlignment="Right" VerticalAlignment="Top"
+                    Background="Transparent" BorderThickness="0"
+                    Cursor="Hand"
+                    Click="BtnLater_Click">
+                <Path Data="{StaticResource CloseIcon}"
+                      Stroke="{DynamicResource TextSecondaryBrush}"
+                      StrokeThickness="1.8"
+                      Stretch="Uniform" Width="14" Height="14"/>
+            </Button>
+
+            <!-- Header with icon -->
+            <StackPanel Grid.Row="0" Orientation="Horizontal"
+                        HorizontalAlignment="Left" Margin="0,0,0,16">
+                <Border Width="48" Height="48" CornerRadius="24"
+                        Background="{StaticResource PrimaryBrush}"
+                        VerticalAlignment="Top">
+                    <Path Data="M3 17v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4 M12 3v12 M8 11l4 4 4-4"
+                          Stroke="White" StrokeThickness="2"
+                          StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                          Stretch="Uniform" Width="20" Height="20"
+                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="Actualización disponible"
+                               FontSize="18" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    <TextBlock x:Name="VersionText"
+                               Text="NovaPad X.X.X"
+                               FontSize="13" FontWeight="Normal"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               Margin="0,2,0,0"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Description -->
+            <Border Grid.Row="1"
+                    Background="{DynamicResource SurfaceAltBrush}"
+                    CornerRadius="8" Padding="14,10"
+                    Margin="0,0,0,20">
+                <TextBlock Text="Se encontró una nueva versión. ¿Qué deseas hacer?"
+                           FontSize="13"
+                           Foreground="{DynamicResource TextPrimaryBrush}"
+                           TextWrapping="Wrap"/>
+            </Border>
+
+            <!-- Action buttons -->
+            <Grid Grid.Row="2" Margin="0,0,0,8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" CornerRadius="8"
+                        Background="{StaticResource PrimaryBrush}">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Opacity" Value="1"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsMouseOver, ElementName=BtnDownloadInstall}" Value="True">
+                                    <Setter Property="Opacity" Value="0.85"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <Button x:Name="BtnDownloadInstall"
+                            Content="Descargar e instalar"
+                            Click="BtnDownloadInstall_Click"
+                            IsDefault="True"
+                            Background="Transparent" BorderThickness="0"
+                            Foreground="White"
+                            Padding="0,11" FontSize="13" FontWeight="SemiBold"
+                            Cursor="Hand"
+                            HorizontalAlignment="Stretch"/>
+                </Border>
+
+                <Grid Grid.Row="1" Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" CornerRadius="8" Margin="0,0,6,0"
+                            Background="{DynamicResource SurfaceAltBrush}">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Opacity" Value="1"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsMouseOver, ElementName=BtnDownload}" Value="True">
+                                        <Setter Property="Opacity" Value="0.75"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <Button x:Name="BtnDownload"
+                                Content="Solo descargar"
+                                Click="BtnDownload_Click"
+                                Background="Transparent"
+                                Foreground="{DynamicResource TextPrimaryBrush}"
+                                BorderThickness="0"
+                                Padding="0,10" FontSize="12"
+                                Cursor="Hand"
+                                HorizontalAlignment="Stretch"/>
+                    </Border>
+                    <Button Grid.Column="1" x:Name="BtnLater"
+                            Content="Más tarde"
+                            Click="BtnLater_Click"
+                            Background="Transparent"
+                            Foreground="{DynamicResource TextSecondaryBrush}"
+                            BorderThickness="0"
+                            Padding="0,10" FontSize="12"
+                            Cursor="Hand"
+                            HorizontalAlignment="Stretch" Margin="6,0,0,0">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Opacity" Value="1"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Opacity" Value="0.65"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Border>
 </Window>

@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
@@ -20,6 +20,7 @@ public class VentanaFondo : Window, IOverlayService
     private PanelExtendido _panelEx = null!;
     private CuadroDepuracion _depu = null!;
     private OrganizadorBurbujas? _avisos;
+    private readonly Queue<(string Title, string Message, double Duration)> _pendingAvisos = new();
     private readonly Dictionary<string, TarjetaMando> _tarjetasPorId = new();
     private readonly StackPanel _zonaAvisos = new();
     private readonly DispatcherTimer _tickDepu = new();
@@ -28,6 +29,7 @@ public class VentanaFondo : Window, IOverlayService
     private int _frames;
     private DateTime _ultimoTick = DateTime.UtcNow;
     private string _acentoHex = "#00BCD4";
+    private string _bgHex = "#222222";
     private double _escala = 1.0;
     private string _anclajeHud = "TopRight";
     private double _desvioX = 20;
@@ -53,9 +55,11 @@ public class VentanaFondo : Window, IOverlayService
 
     private const int WM_HOTKEY = 0x0312;
     private const int IdHotkey = 9001;
+    private const int IdHotkeyUpdate = 9002;
     private const int MOD_CONTROL = 0x0002;
     private const int MOD_SHIFT = 0x0004;
     private const int VK_O = 0x4F;
+    private const int VK_P = 0x50;
 
     [DllImport("user32.dll")]
     private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
@@ -69,48 +73,9 @@ public class VentanaFondo : Window, IOverlayService
     [DllImport("user32.dll", SetLastError = true)]
     private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
-    [DllImport("user32.dll")]
-    private static extern bool SetLayeredWindowAttributes(IntPtr hwnd, uint crKey, byte bAlpha, uint dwFlags);
-
-    [DllImport("user32.dll")]
-    private static extern int SetWindowCompositionAttribute(IntPtr hwnd, ref WindowCompositionAttributeData data);
 
     private const int GWL_EXSTYLE = -20;
-    private const int WS_EX_LAYERED = 0x00080000;
     private const int WS_EX_TRANSPARENT = 0x00000020;
-    private const uint LWA_ALPHA = 0x00000002;
-
-    private enum AccentState
-    {
-        ACCENT_DISABLED = 0,
-        ACCENT_ENABLE_GRADIENT = 1,
-        ACCENT_ENABLE_TRANSPARENTGRADIENT = 2,
-        ACCENT_ENABLE_BLURBEHIND = 3,
-        ACCENT_ENABLE_ACRYLICBLURBEHIND = 4,
-        ACCENT_INVALID_STATE = 5
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct AccentPolicy
-    {
-        public AccentState AccentState;
-        public uint AccentFlags;
-        public uint GradientColor;
-        public uint AnimationId;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct WindowCompositionAttributeData
-    {
-        public WindowCompositionAttribute Attribute;
-        public IntPtr Data;
-        public int SizeOfData;
-    }
-
-    private enum WindowCompositionAttribute
-    {
-        WCA_ACCENT_POLICY = 19
-    }
 
     public VentanaFondo()
     {
@@ -147,6 +112,15 @@ public class VentanaFondo : Window, IOverlayService
         _avisos = new OrganizadorBurbujas(_zonaAvisos, _acentoHex);
         _avisos.CambiarEstilo(_estiloAviso, _acentoHex);
 
+        var pendingCount = _pendingAvisos.Count;
+        if (pendingCount > 0)
+        {
+            Log.Information("[VentanaFondo] Draining {Count} pending notifications...", pendingCount);
+            while (_pendingAvisos.TryDequeue(out var n))
+                _avisos.Lanzar(n.Title, n.Message, n.Duration);
+            Log.Information("[VentanaFondo] Pending notifications drained");
+        }
+
         RecalcularAnclajeAvisos();
         Canvas.SetLeft(_panelEx.Vista, (Width - 360) / 2);
         Canvas.SetTop(_panelEx.Vista, (Height - 400) / 2);
@@ -177,7 +151,14 @@ public class VentanaFondo : Window, IOverlayService
         if (_initialized)
             return;
 
-        InicializarUI();
+        try
+        {
+            InicializarUI();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "[VentanaFondo] InicializarUI failed");
+        }
         _initialized = true;
         _readyTcs.TrySetResult();
     }
@@ -212,15 +193,30 @@ public class VentanaFondo : Window, IOverlayService
         SetWindowLong(hwnd, GWL_EXSTYLE, exStyle | WS_EX_TRANSPARENT);
 
         RegisterHotKey(hwnd, IdHotkey, MOD_CONTROL | MOD_SHIFT, VK_O);
-        Log.Information("[VentanaFondo] Hotkey Ctrl+Shift+O registrado");
+        RegisterHotKey(hwnd, IdHotkeyUpdate, MOD_CONTROL | MOD_SHIFT, VK_P);
+        Log.Information("[VentanaFondo] Hotkey Ctrl+Shift+O y Ctrl+Shift+P registrados");
     }
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
         if (msg == WM_HOTKEY)
         {
-            AlternarPanel();
-            handled = true;
+            if ((int)wParam == IdHotkeyUpdate)
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var dialog = new Views.UpdatePromptWindow("v9.9.9");
+                    dialog.Owner = Application.Current.MainWindow;
+                    dialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                    dialog.ShowDialog();
+                });
+                handled = true;
+            }
+            else
+            {
+                AlternarPanel();
+                handled = true;
+            }
         }
         return IntPtr.Zero;
     }
@@ -239,7 +235,8 @@ public class VentanaFondo : Window, IOverlayService
     protected override void OnClosed(EventArgs e)
     {
         var helper = new WindowInteropHelper(this);
-        UnregisterHotKey(helper.Handle, IdHotkey);
+        try { UnregisterHotKey(helper.Handle, IdHotkey); } catch { }
+        try { UnregisterHotKey(helper.Handle, IdHotkeyUpdate); } catch { }
         _panelEx?.Detener();
         _tickDepu.Stop();
         Log.Information("[VentanaFondo] Ventana cerrada");
@@ -261,6 +258,7 @@ public class VentanaFondo : Window, IOverlayService
         Opacity = cfg.Opacidad;
         _escala = cfg.Escala;
         _acentoHex = cfg.ColorAcento;
+        _bgHex = cfg.ColorFondo;
         _duracionAviso = cfg.DuracionAviso;
         _anclajeHud = cfg.AnclajeHud;
         _desvioX = cfg.DesvioX;
@@ -344,24 +342,56 @@ public class VentanaFondo : Window, IOverlayService
 
     public void ShowNotification(string title, string message)
     {
-        Log.Information("[Manejador] Notificacion: {Titulo} {Msj}", title, message);
-        if (_verAvisos)
-            _avisos?.Lanzar(title, message, _duracionAviso);
+        _ = Dispatcher.InvokeAsync(() =>
+        {
+            Log.Information("[Manejador] Notificacion: {Titulo} {Msj}", title, message);
+            Log.Information("[Manejador] _verAvisos={VerAvisos}, _avisos is null={IsNull}", _verAvisos, _avisos == null);
+            if (!_verAvisos) return;
+            if (_avisos != null)
+            {
+                _avisos.Lanzar(title, message, _duracionAviso);
+                Log.Information("[Manejador] Notification dispatched to Lanzar");
+            }
+            else
+            {
+                _pendingAvisos.Enqueue((title, message, _duracionAviso));
+                Log.Information("[Manejador] Notification buffered (pending={Count})", _pendingAvisos.Count);
+            }
+        });
     }
 
     public void NotifyConnection(EstadoConexion ev)
     {
-        Log.Information("[Manejador] Conexion: {Id} {Conectado}", ev.IdMando, ev.Conectado);
-        if (_verAvisos)
+        _ = Dispatcher.InvokeAsync(() =>
         {
+            Log.Information("[Manejador] Conexion: {Id} {Conectado}", ev.IdMando, ev.Conectado);
+            Log.Information("[Manejador] _verAvisos={VerAvisos}, _avisos is null={IsNull}", _verAvisos, _avisos == null);
+            if (!_verAvisos) return;
             var titulo = ev.Conectado ? "Mando Conectado" : "Mando Desconectado";
-            _avisos?.Lanzar(titulo, ev.NombreMando, _duracionAviso);
-        }
+            if (_avisos != null)
+            {
+                _avisos.Lanzar(titulo, ev.NombreMando, _duracionAviso);
+                Log.Information("[Manejador] Connection notification dispatched");
+            }
+            else
+            {
+                _pendingAvisos.Enqueue((titulo, ev.NombreMando, _duracionAviso));
+                Log.Information("[Manejador] Connection notification buffered (pending={Count})", _pendingAvisos.Count);
+            }
+        });
     }
 
     public void NotifyTheme(CambioTema ev)
     {
-        Log.Information("[Manejador] Tema: oscuro={Oscuro}", ev.Oscuro);
+        _ = Dispatcher.InvokeAsync(() =>
+        {
+            Log.Information("[Manejador] Tema: oscuro={Oscuro}, opacidad={Opacidad}", ev.Oscuro, ev.OpacidadFondo);
+            Opacity = ev.OpacidadFondo;
+            byte alpha = 1;
+            byte bgVal = ev.Oscuro ? (byte)0 : (byte)20;
+            Background = new SolidColorBrush(Color.FromArgb(alpha, bgVal, bgVal, bgVal));
+            Log.Information("[Manejador] Theme applied");
+        });
     }
 
     public void TogglePanel()
@@ -386,7 +416,18 @@ public class VentanaFondo : Window, IOverlayService
                 Lienzo.Children.Add(tarjeta.Vista);
                 _tarjetasPorId[m.Id] = tarjeta;
                 if (_configPorMando.TryGetValue(m.Id, out var cardCfg))
-                    tarjeta.Reconfigurar(cardCfg, _escala);
+                {
+                    if (Enum.TryParse<EstiloTarjeta>(cardCfg.EstiloTarjeta, true, out var nuevoEstilo)
+                        && nuevoEstilo != tarjeta.ObtenerEstilo)
+                    {
+                        ReemplazarTarjeta(m.Id, tarjeta, cardCfg, nuevoEstilo);
+                        tarjeta = _tarjetasPorId[m.Id];
+                    }
+                    else
+                    {
+                        tarjeta.Reconfigurar(cardCfg, _escala);
+                    }
+                }
             }
             tarjeta.Aplicar(m);
         }
@@ -506,7 +547,7 @@ public class VentanaFondo : Window, IOverlayService
     private TarjetaMando CrearTarjeta(string id)
     {
         var t = new TarjetaMando(_acentoHex, _estiloTarjeta);
-        t.Reconfigurar(_acentoHex, "#222222", _escala,
+        t.Reconfigurar(_acentoHex, _bgHex, _escala,
             _verBateria, _verLatencia, _verFrecuencia, _verPerfil, _verConexion, _verTipo);
         return t;
     }
@@ -522,7 +563,15 @@ public class VentanaFondo : Window, IOverlayService
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
-        Log.Information("[VentanaFondo] Cerrando overlay...");
+        var helper = new WindowInteropHelper(this);
+        try { UnregisterHotKey(helper.Handle, IdHotkey); } catch { }
+        _panelEx?.Detener();
+        _tickDepu.Stop();
+        Log.Information("[VentanaFondo] Ventana cerrada");
         base.OnClosing(e);
     }
 }
+
+
+
+

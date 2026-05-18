@@ -12,6 +12,10 @@ public partial class PaginaOverlay : UserControl
         InitializeComponent();
         _vm = vm;
         DataContext = vm;
-        Loaded += (_, _) => _vm.UpdateRunningState();
+        Loaded += (_, _) =>
+        {
+            _vm.RefreshSettings();
+            _vm.UpdateRunningState();
+        };
     }
 }

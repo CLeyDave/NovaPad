@@ -40,7 +40,7 @@ public class TarjetaMando
     private Border? _trkL2, _nvlL2, _trkR2, _nvlR2;
     private TextBlock? _txtL2, _txtR2;
     private Border? _btnA, _btnB, _btnX, _btnY;
-    private TextBlock? _textoLatencia, _textoPorcentaje;
+    private TextBlock? _textoPorcentaje;
 
     private string _bgHex = "#222222";
     private double _escala = 1.0;
@@ -977,8 +977,7 @@ public class TarjetaMando
         if (_estilo == EstiloTarjeta.InputVisualizer)
             EscalarInputVisualizer();
 
-        if (_textoLatencia != null)
-            _textoLatencia.FontSize = 11 * escala;
+
     }
 
     public void Reconfigurar(OverlayCardConfig cfg, double escala)

@@ -1,4 +1,4 @@
-<UserControl x:Class="NovaPad.WPF.Views.ControllerDetailView"
+﻿<UserControl x:Class="NovaPad.WPF.Views.ControllerDetailView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -102,6 +102,17 @@
                              Content="{Binding Source={x:Static services:LocalizationService.Instance}, Path=[Detail_Local]}"/>
             </StackPanel>
         </Border>
+
+        <!-- WebView2 Error message -->
+        <TextBlock Grid.Row="2" x:Name="WebViewErrorText"
+                   Visibility="Collapsed"
+                   Text="WebView2 no est� disponible. Aseg�rate de tener Microsoft Edge WebView2 Runtime instalado."
+                   Foreground="{DynamicResource ErrorBrush}"
+                   Background="{DynamicResource SurfaceAltBrush}"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                   TextWrapping="Wrap" TextAlignment="Center"
+                   Margin="32" FontSize="13"
+                   Padding="16"/>
 
         <!-- Online tab (e7d.io) -->
         <wv2:WebView2 Grid.Row="2" x:Name="OnlineWebView"

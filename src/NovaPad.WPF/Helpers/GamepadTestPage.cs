@@ -1,4 +1,4 @@
-namespace NovaPad.WPF.Helpers;
+﻿namespace NovaPad.WPF.Helpers;
 
 public static class GamepadTestPage
 {
@@ -147,7 +147,7 @@ public static class GamepadTestPage
 
   window.addEventListener('gamepadconnected',()=>{S.className='status connected';update();});
   window.addEventListener('gamepaddisconnected',()=>{S.className='status disconnected';S.textContent='Desconectado';});
-  setInterval(()=>{const g=navigator.getGamepads()[0];if(g)update();},50);
+
 </script>
 </body>
 </html>";

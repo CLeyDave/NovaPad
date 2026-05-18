@@ -1,4 +1,4 @@
-#pragma warning disable CS0612
+﻿#pragma warning disable CS0612
 
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -445,7 +445,15 @@ public class LightingEngine : IDisposable
                 continue;
             }
 
-            await ctx.StreamLock.WaitAsync(ct);
+            try
+            {
+                await ctx.StreamLock.WaitAsync(ct);
+            }
+            catch (OperationCanceledException)
+            {
+                continue;
+            }
+
             try
             {
                 Log.Debug("[LightingEngine] Writing RGB({R},{G},{B}) to {Id}",
@@ -612,7 +620,7 @@ public class LightingEngine : IDisposable
         {
             if (ctrl.Connection == ConnectionType.Bluetooth)
             {
-                // --- BT init handshake (feature report 0x02) — one-time ---
+                // --- BT init handshake (feature report 0x02) â€” one-time ---
                 if (!ctx.IsBtInitialized)
                 {
                     if (InitializeDs4BtMode(stream))
@@ -746,7 +754,7 @@ public class LightingEngine : IDisposable
 
         var ctx = new DeviceContext { ControllerId = controllerId, Info = ctrl };
         _devices[controllerId] = ctx;
-        Log.Information("[LightingEngine] Created device context for {Name} ({Id}) — VID={Vid} PID={Pid}",
+        Log.Information("[LightingEngine] Created device context for {Name} ({Id}) â€” VID={Vid} PID={Pid}",
             ctrl.EffectiveName, controllerId, ctrl.VendorId, ctrl.ProductId);
         return ctx;
     }
@@ -863,7 +871,7 @@ public class LightingEngine : IDisposable
             return true;
         }
 
-        Log.Warning("[LightingEngine] DS4 BT feature report 0x02 first byte is 0x00 — sending BT mode init");
+        Log.Warning("[LightingEngine] DS4 BT feature report 0x02 first byte is 0x00 â€” sending BT mode init");
 
         var initBuf = new byte[64];
         initBuf[0] = 0x02;
@@ -891,149 +899,6 @@ public class LightingEngine : IDisposable
         {
             Log.Error(ex, "[LightingEngine] SET_FEATURE(0x02) for BT init failed");
             return false;
-        }
-    }
-
-    private bool WriteRawReport(DeviceContext ctx, byte[] report)
-    {
-        try
-        {
-            var ctrl = ctx.Info;
-            if (ctrl == null) return false;
-
-            var devicePath = FindDevicePath(ctrl.VendorId, ctrl.ProductId, ctx.ControllerId, ctrl.HidDevicePath);
-            if (devicePath == null)
-            {
-                Log.Warning("[LightingEngine] WriteRawReport: no device path for {Id}", ctx.ControllerId);
-                return false;
-            }
-
-            var handle = NativeMethods.CreateFile(
-                devicePath,
-                NativeMethods.EFileAccess.GENERIC_READ | NativeMethods.EFileAccess.GENERIC_WRITE,
-                NativeMethods.EFileShare.FILE_SHARE_READ | NativeMethods.EFileShare.FILE_SHARE_WRITE,
-                IntPtr.Zero,
-                NativeMethods.ECreationDisposition.OPEN_EXISTING,
-                NativeMethods.EFileAttributes.NORMAL,
-                IntPtr.Zero);
-
-            if (handle.IsInvalid)
-            {
-                var err = Marshal.GetLastWin32Error();
-                Log.Warning("[LightingEngine] WriteRawReport: CreateFile failed for {Id}, error={Err}", ctx.ControllerId, err);
-                return false;
-            }
-
-            try
-            {
-                uint bytesWritten = 0;
-                var success = NativeMethods.WriteFile(handle, report, (uint)report.Length, out bytesWritten, IntPtr.Zero);
-                if (!success)
-                {
-                    var err = Marshal.GetLastWin32Error();
-                    Log.Warning("[LightingEngine] WriteRawReport: WriteFile failed for {Id}, error={Err}", ctx.ControllerId, err);
-                    return false;
-                }
-
-                Log.Debug("[LightingEngine] WriteRawReport: wrote {Bytes} bytes to {Id} via WriteFile", bytesWritten, ctx.ControllerId);
-                return true;
-            }
-            finally
-            {
-                handle.Close();
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "[LightingEngine] WriteRawReport: exception for {Id}", ctx.ControllerId);
-            return false;
-        }
-    }
-
-    private bool WriteReportViaControlPipe(DeviceContext ctx, byte[] report)
-    {
-        try
-        {
-            var ctrl = ctx.Info;
-            if (ctrl == null) return false;
-
-            var devicePath = FindDevicePath(ctrl.VendorId, ctrl.ProductId, ctx.ControllerId, ctrl.HidDevicePath);
-            if (devicePath == null) return false;
-
-            var handle = NativeMethods.CreateFile(
-                devicePath,
-                NativeMethods.EFileAccess.GENERIC_READ | NativeMethods.EFileAccess.GENERIC_WRITE,
-                NativeMethods.EFileShare.FILE_SHARE_READ | NativeMethods.EFileShare.FILE_SHARE_WRITE,
-                IntPtr.Zero,
-                NativeMethods.ECreationDisposition.OPEN_EXISTING,
-                NativeMethods.EFileAttributes.NORMAL,
-                IntPtr.Zero);
-
-            if (handle.IsInvalid)
-            {
-                Log.Warning("[LightingEngine] WriteReportViaControlPipe: CreateFile failed for {Id}, error={Err}",
-                    ctx.ControllerId, Marshal.GetLastWin32Error());
-                return false;
-            }
-
-            try
-            {
-                var success = NativeMethods.HidD_SetOutputReport(handle, report, report.Length);
-                if (!success)
-                {
-                    var err = Marshal.GetLastWin32Error();
-                    Log.Warning("[LightingEngine] WriteReportViaControlPipe: HidD_SetOutputReport failed, error={Err}", err);
-                    return false;
-                }
-
-                Log.Debug("[LightingEngine] WriteReportViaControlPipe: success ({Len} bytes) for {Id}", report.Length, ctx.ControllerId);
-                return true;
-            }
-            finally
-            {
-                handle.Close();
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "[LightingEngine] WriteReportViaControlPipe: exception for {Id}", ctx.ControllerId);
-            return false;
-        }
-    }
-
-    private static string? FindDevicePath(int vendorId, int productId, string controllerId, string? devicePath = null)
-    {
-        try
-        {
-            var devices = DeviceList.Local.GetHidDevices()
-                .Where(d => (ushort)d.VendorID == vendorId && (ushort)d.ProductID == productId)
-                .ToList();
-
-            Log.Debug("[LightingEngine] FindDevicePath: found {Count} device(s) for VID={Vid}, PID={Pid} ({Id})",
-                devices.Count, vendorId, productId, controllerId);
-
-            foreach (var d in devices)
-            {
-                Log.Debug("[LightingEngine]   Path candidate: {Path} (InLen={InLen}, OutLen={OutLen})",
-                    d.DevicePath, d.MaxInputReportLength, d.MaxOutputReportLength);
-            }
-
-            // Prefer exact device path match (critical when two identical controllers are connected)
-            if (!string.IsNullOrEmpty(devicePath))
-            {
-                var exact = devices.FirstOrDefault(d =>
-                    d.DevicePath.Equals(devicePath, StringComparison.OrdinalIgnoreCase));
-                if (exact != null)
-                    return exact.DevicePath;
-            }
-
-            return devices.OrderByDescending(d => d.MaxInputReportLength)
-                          .FirstOrDefault()?.DevicePath;
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "[LightingEngine] FindDevicePath: exception for {Id}", controllerId);
-            return null;
         }
     }
 
@@ -1113,3 +978,5 @@ public class LightingEngine : IDisposable
         public bool IsBtInitialized;
     }
 }
+
+

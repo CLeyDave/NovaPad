@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using NovaPad.Core.Enums;
 using NovaPad.Core.Interfaces;
 using NovaPad.Core.Models;
@@ -85,7 +85,10 @@ public class RealControllerManagerService : IControllerManagerService
                         UpdateBatteryState(ctrl);
                     }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "[RealControllerManagerService] PollBatteryAsync failed for {Id}", ctrl.Id);
+                }
             }
         }
     }
@@ -143,11 +146,13 @@ public class RealControllerManagerService : IControllerManagerService
 
     public Task<bool> SetRumbleAsync(string controllerId, double leftMotor, double rightMotor)
     {
+        Log.Warning("[RealControllerManagerService] SetRumbleAsync: not implemented for {Id}", controllerId);
         return Task.FromResult(false);
     }
 
     public Task<bool> SetLedColorAsync(string controllerId, byte r, byte g, byte b)
     {
+        Log.Warning("[RealControllerManagerService] SetLedColorAsync: not implemented for {Id}", controllerId);
         return Task.FromResult(false);
     }
 
@@ -207,7 +212,10 @@ public class RealControllerManagerService : IControllerManagerService
                 return;
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "[RealControllerManagerService] TryFillBattery (backend) failed for {Id}", info.Id);
+        }
 
         try
         {
@@ -217,7 +225,10 @@ public class RealControllerManagerService : IControllerManagerService
                 info.BatteryLevel = hidLevel.Value;
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "[RealControllerManagerService] TryFillBattery (HID) failed for {Id}", info.Id);
+        }
     }
 
     private void OnDeviceArrived(object? sender, ControllerInfo info)
@@ -347,3 +358,4 @@ public class RealControllerManagerService : IControllerManagerService
         public Queue<double> Intervals { get; } = new(30);
     }
 }
+

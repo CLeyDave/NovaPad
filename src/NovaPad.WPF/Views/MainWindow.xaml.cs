@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -253,7 +253,10 @@ public partial class MainWindow : Window
                 var overlayVm = App.GetService<AdminOverlayVm>();
                 overlayVm.UpdateRunningState();
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "[MainWindow] Hotkey handler failed");
+            }
             handled = true;
         }
         return IntPtr.Zero;
@@ -266,3 +269,4 @@ public partial class MainWindow : Window
         base.OnClosed(e);
     }
 }
+

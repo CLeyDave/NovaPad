@@ -68,24 +68,16 @@ public partial class SettingsViewModel : ObservableObject
     {
         _loading = true;
         var s = _settings.Settings;
-        _startWithWindows = s.StartWithWindows;
-        _minimizeToTray = s.MinimizeToTray;
-        _theme = _themeService.IsDarkTheme ? "Oscuro" : "Claro";
+        StartWithWindows = s.StartWithWindows;
+        MinimizeToTray = s.MinimizeToTray;
+        Theme = _themeService.IsDarkTheme ? "Oscuro" : "Claro";
         _localization.CurrentLang = s.Language;
-        _language = _localization.IsEnglish ? "English" : "Español";
+        Language = _localization.IsEnglish ? "English" : "Español";
 
-        _notificationDuration = s.Notifications.DurationSeconds;
-        _batteryWarningThreshold = s.Notifications.BatteryWarningThreshold;
-        _showConnectionNotifications = s.Notifications.ShowConnectionNotifications;
-        _showBatteryNotifications = s.Notifications.ShowBatteryNotifications;
-        OnPropertyChanged(nameof(StartWithWindows));
-        OnPropertyChanged(nameof(MinimizeToTray));
-        OnPropertyChanged(nameof(Theme));
-        OnPropertyChanged(nameof(Language));
-        OnPropertyChanged(nameof(NotificationDuration));
-        OnPropertyChanged(nameof(BatteryWarningThreshold));
-        OnPropertyChanged(nameof(ShowConnectionNotifications));
-        OnPropertyChanged(nameof(ShowBatteryNotifications));
+        NotificationDuration = s.Notifications.DurationSeconds;
+        BatteryWarningThreshold = s.Notifications.BatteryWarningThreshold;
+        ShowConnectionNotifications = s.Notifications.ShowConnectionNotifications;
+        ShowBatteryNotifications = s.Notifications.ShowBatteryNotifications;
         _loading = false;
     }
 
@@ -130,8 +122,10 @@ public partial class SettingsViewModel : ObservableObject
 
     private async void AutoSave()
     {
-        _saveCts?.Cancel();
+        var oldCts = _saveCts;
         _saveCts = new CancellationTokenSource();
+        oldCts?.Cancel();
+        oldCts?.Dispose();
         var token = _saveCts.Token;
 
         try

@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using NovaPad.Core.Events;
 
 namespace NovaPad.Core.Interfaces;
@@ -14,4 +15,6 @@ public interface IOverlayService
     void NotifyConnection(EstadoConexion ev);
     void NotifyTheme(CambioTema ev);
     void TogglePanel();
+    Task WaitUntilReadyAsync();
+    void ResetReadyState();
 }

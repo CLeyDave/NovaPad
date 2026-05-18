@@ -304,7 +304,8 @@ public class HidService : IDisposable
                     if ((now - _lastInputScan).TotalMilliseconds >= 300)
                     {
                         _lastInputScan = now;
-                        DiffScan();
+                try { DiffScan(); }
+                catch (Exception ex) { Debug.WriteLine($"[HidService] DiffScan failed: {ex.Message}"); }
                     }
                 }
             }
@@ -360,6 +361,25 @@ public class HidService : IDisposable
         // Require feature reports for Sony (gamepad has them, audio/consumer don't)
         if (vid == 0x054C && featLen == 0)
             return false;
+
+        // Reject keyboards and mice by HID usage page
+        try
+        {
+            var descriptor = device.GetReportDescriptor();
+            if (descriptor?.DeviceItems?.Count > 0 && descriptor.DeviceItems[0].Usages != null)
+            {
+                var values = descriptor.DeviceItems[0].Usages.GetAllValues()?.ToList();
+                if (values != null && values.Count > 0)
+                {
+                    var raw = values[0];
+                    var usagePage = (ushort)((raw >> 16) & 0xFFFF);
+                    var usage = (ushort)(raw & 0xFFFF);
+                    if (usagePage == 0x0001 && (usage == 0x0006 || usage == 0x0002))
+                        return false;
+                }
+            }
+        }
+        catch { }
 
         Debug.WriteLine($"[HidService] ACCEPTED: VID={vid:X4} PID={pid:X4} Inp={inpLen} Feat={featLen}");
         return true;

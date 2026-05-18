@@ -1,3 +1,4 @@
+﻿using System.Windows;
 using System.Windows.Controls;
 
 namespace NovaPad.WPF.Overlay.Partes;
@@ -40,17 +41,26 @@ public class OrganizadorBurbujas
         burbuja.Vista.Visibility = System.Windows.Visibility.Visible;
         burbuja.Mostrar(titulo, cuerpo, duracion);
 
-        _ = DescartarAsync(burbuja, (int)(duracion * 1000));
+        _ = DescartarAsync(burbuja, (int)(duracion * 1000)).ContinueWith(t =>
+        {
+            if (t.IsFaulted)
+            {
+                System.Diagnostics.Debug.WriteLine($"[OrganizadorBurbujas] Error in DescartarAsync: {t.Exception?.InnerException?.Message}");
+            }
+        }, TaskContinuationOptions.OnlyOnFaulted);
     }
 
     private async Task DescartarAsync(BurbujaInfo b, int ms)
     {
         await Task.Delay(ms);
-        b.Ocultar();
+        await _panel.Dispatcher.InvokeAsync(() => b.Ocultar());
         await Task.Delay(400);
-        b.Vista.Visibility = System.Windows.Visibility.Collapsed;
-        _contadorActivas--;
-        ProcesarCola();
+        await _panel.Dispatcher.InvokeAsync(() =>
+        {
+            b.Vista.Visibility = Visibility.Collapsed;
+            _contadorActivas--;
+            ProcesarCola();
+        });
     }
 
     private void ProcesarCola()
@@ -87,3 +97,4 @@ public class OrganizadorBurbujas
         }
     }
 }
+

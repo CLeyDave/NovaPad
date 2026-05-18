@@ -49,10 +49,7 @@ public class AppSettingsService : IAppSettingsService
         {
             Directory.CreateDirectory(_dir);
             var json = JsonSerializer.Serialize(_settings, new JsonSerializerOptions { WriteIndented = true, NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals });
-            var tmp = _filePath + ".tmp";
-            File.WriteAllText(tmp, json);
-            if (File.Exists(_filePath)) File.Replace(tmp, _filePath, null);
-            else File.Move(tmp, _filePath);
+            File.WriteAllText(_filePath, json);
             Log.Information("[AppSettings] Saved to {Path}", _filePath);
         }
         catch (Exception ex)

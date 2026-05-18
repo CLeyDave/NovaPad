@@ -38,10 +38,6 @@ public class BurbujaInfo
             TextTrimming = TextTrimming.CharacterEllipsis
         };
 
-        var columna = new StackPanel();
-        columna.Children.Add(_linea1);
-        columna.Children.Add(_linea2);
-
         _barraAcento = new Border
         {
             CornerRadius = new CornerRadius(2),
@@ -70,6 +66,7 @@ public class BurbujaInfo
             RenderTransformOrigin = new Point(0.5, 0.5),
             Effect = sombra
         };
+        _contenedor.RenderTransform = new TranslateTransform();
 
         AplicarEstilo();
 

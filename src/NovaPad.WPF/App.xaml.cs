@@ -158,6 +158,10 @@ public partial class App
             Log.Information("[{Elapsed}] Loading settings...", sw.Elapsed);
             settings.Load();
 
+            // Refresh overlay VM settings AFTER load so it uses saved values, not defaults
+            try { _host.Services.GetRequiredService<AdminOverlayVm>().RefreshSettings(); }
+            catch (Exception ex) { Log.Warning(ex, "[Startup] Failed to refresh overlay settings"); }
+
             Log.Information("[{Elapsed}] Starting controller detection...", sw.Elapsed);
             await controllerService.StartDetectionAsync();
 
@@ -169,9 +173,43 @@ public partial class App
             {
                 try
                 {
-                    Log.Information("[Background] Scanning controllers...");
-                    await controllerService.ScanForControllersAsync();
-                    Log.Information("[Background] Controller scan completed.");
+                    try
+                    {
+                        Log.Information("[Background] Scanning controllers...");
+                        await controllerService.ScanForControllersAsync();
+                        Log.Information("[Background] Controller scan completed.");
+                    }
+                    catch (Exception exScan)
+                    {
+                        Log.Error(exScan, "[Background] Controller scan failed");
+                    }
+
+                        // Restore overlay auto-start (independent of scan result)
+                        Log.Information("[Background] Auto-start check: Activado={Activado}", settings.Settings.Overlay.Activado);
+                        if (settings.Settings.Overlay.Activado)
+                        {
+                            Log.Information("[Background] Restoring overlay (auto-start)...");
+                            try
+                            {
+                                var overlayTask = Task.CompletedTask;
+                                await Application.Current.Dispatcher.InvokeAsync(() =>
+                                {
+                                    var overlayVm = _host.Services.GetRequiredService<AdminOverlayVm>();
+                                    overlayTask = overlayVm.RestoreAsync();
+                                });
+                                await overlayTask;
+                                var isActive = false;
+                                await Application.Current.Dispatcher.InvokeAsync(() =>
+                                {
+                                    isActive = _host.Services.GetRequiredService<IOverlayService>().IsActive;
+                                });
+                                Log.Information("[Background] Overlay restored, IsActive={IsActive}", isActive);
+                            }
+                            catch (Exception exOv)
+                            {
+                                Log.Error(exOv, "[Background] Overlay auto-restore failed");
+                            }
+                        }
 
                     await Application.Current.Dispatcher.InvokeAsync(() =>
                     {
@@ -238,27 +276,6 @@ public partial class App
                         catch (Exception exUpd)
                         {
                             Log.Error(exUpd, "[Background] Update check error");
-                        }
-
-                        // Restore overlay auto-start
-                        if (settings.Settings.Overlay.Activado)
-                        {
-                            Log.Information("[Background] Restoring overlay (auto-start)...");
-                            try
-                            {
-                                var overlayTask = Task.CompletedTask;
-                                await Application.Current.Dispatcher.InvokeAsync(() =>
-                                {
-                                    var overlayVm = _host.Services.GetRequiredService<AdminOverlayVm>();
-                                    overlayTask = overlayVm.RestoreAsync();
-                                });
-                                await overlayTask;
-                                Log.Information("[Background] Overlay restored successfully");
-                            }
-                            catch (Exception exOv)
-                            {
-                                Log.Error(exOv, "[Background] Overlay auto-restore failed");
-                            }
                         }
                     }
                     catch (Exception ex)

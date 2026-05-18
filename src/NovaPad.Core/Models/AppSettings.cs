@@ -10,7 +10,6 @@ public class AppSettings
     public Dictionary<string, InputProcessingConfig> InputProcessing { get; set; } = new();
     public bool StartWithWindows { get; set; }
     public bool MinimizeToTray { get; set; }
-    public bool AutoStartOverlay { get; set; } = true;
     public string Language { get; set; } = "es";
 }
 

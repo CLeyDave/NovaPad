@@ -2,7 +2,7 @@
 ; Requires Inno Setup 6+
 
 #define MyAppName "NovaPad"
-#define MyAppVersion "3.3.4"
+#define MyAppVersion "3.3.5"
 #define MyAppPublisher "CLeyDave"
 #define MyAppURL "https://github.com/CLeyDave/NovaPad"
 #define MyAppExeName "NovaPad.WPF.exe"

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Controls;
 using NovaPad.WPF.Helpers;
@@ -49,6 +49,8 @@ public partial class ControllerDetailView : UserControl
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[WebView2] Error: {ex.Message}");
+            WebViewErrorText.Text = $"WebView2 error: {ex.Message}\n\nAsegúrate de tener Microsoft Edge WebView2 Runtime instalado.";
+            WebViewErrorText.Visibility = Visibility.Visible;
         }
     }
 
@@ -63,3 +65,4 @@ public partial class ControllerDetailView : UserControl
         catch { }
     }
 }
+
