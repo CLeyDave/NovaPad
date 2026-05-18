@@ -8,6 +8,7 @@ public interface IControllerManagerService
     event EventHandler<ControllerInfo>? ControllerDisconnected;
     event EventHandler<ControllerState>? InputReceived;
     event EventHandler<ControllerInfo>? ControllerUpdated;
+    event EventHandler<(string Id, string Name, int Level)>? LowBattery;
 
     IReadOnlyList<ControllerInfo> ConnectedControllers { get; }
     ControllerState? GetCurrentState(string controllerId);

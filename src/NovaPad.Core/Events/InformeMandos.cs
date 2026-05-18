@@ -9,6 +9,7 @@ public class InfoMando
     public bool Conectado { get; set; } = true;
     public double LatenciaMs { get; set; }
     public int Hz { get; set; }
+    public double Senal { get; set; } = 1.0;
     public string? PerfilActivo { get; set; }
     public string? TipoMando { get; set; }
 

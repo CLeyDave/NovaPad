@@ -34,6 +34,7 @@ public partial class AdminOverlayVm : ObservableObject
     [ObservableProperty] private bool _showPolling;
     [ObservableProperty] private bool _showProfile = true;
     [ObservableProperty] private bool _showConnection = true;
+    [ObservableProperty] private bool _showSignal = true;
     [ObservableProperty] private bool _showFps;
     [ObservableProperty] private bool _showClock = true;
     [ObservableProperty] private bool _showType = true;
@@ -167,6 +168,7 @@ public partial class AdminOverlayVm : ObservableObject
     partial void OnShowConnectionChanged(bool value) { if (_loading) return; GuardarTarjetaYEnviar(); }
     partial void OnShowFpsChanged(bool value) { if (_loading) return; SaveGlobal(); PushCfg(); PushHud(); }
     partial void OnShowClockChanged(bool value) { if (_loading) return; SaveGlobal(); PushCfg(); PushHud(); }
+    partial void OnShowSignalChanged(bool value) { if (_loading) return; SaveGlobal(); PushCfg(); PushHud(); }
     partial void OnShowTypeChanged(bool value) { if (_loading) return; GuardarTarjetaYEnviar(); }
     partial void OnShowNotifsChanged(bool value) { if (_loading) return; SaveGlobal(); PushCfg(); PushHud(); }
     partial void OnShowConnectionNotificationsChanged(bool value) { if (_loading) return; SaveGlobal(); }
@@ -233,6 +235,7 @@ public partial class AdminOverlayVm : ObservableObject
         NotifOffY = s.Overlay.DesvioAvisoY;
         ShowFps = s.Overlay.VerFps;
         ShowClock = s.Overlay.VerReloj;
+        ShowSignal = s.Overlay.VerSenal;
 
         if (IsPerController && SelectedController != null && s.Overlay.PorMando.TryGetValue(SelectedController.Id, out var pc))
         {
@@ -242,6 +245,7 @@ public partial class AdminOverlayVm : ObservableObject
             ShowProfile = pc.VerPerfil;
             ShowConnection = pc.VerConexion;
             ShowType = pc.VerTipo;
+            ShowSignal = pc.VerSenal;
             if (!string.IsNullOrEmpty(pc.ColorAcento)) Accent = pc.ColorAcento;
             if (!string.IsNullOrEmpty(pc.ColorFondo)) Bg = pc.ColorFondo;
             var eidx = System.Array.IndexOf(EstilosTarjeta, pc.EstiloTarjeta);
@@ -263,6 +267,7 @@ public partial class AdminOverlayVm : ObservableObject
             ShowProfile = s.Overlay.VerPerfil;
             ShowConnection = s.Overlay.VerConexion;
             ShowType = s.Overlay.VerTipo;
+            ShowSignal = s.Overlay.VerSenal;
             Accent = s.Overlay.ColorAcento;
             Bg = s.Overlay.ColorFondo;
             var eidx = System.Array.IndexOf(EstilosTarjeta, s.Overlay.EstiloTarjeta);
@@ -446,6 +451,7 @@ public partial class AdminOverlayVm : ObservableObject
         s.Overlay.DesvioAvisoY = NotifOffY;
         s.Overlay.VerFps = ShowFps;
         s.Overlay.VerReloj = ShowClock;
+        s.Overlay.VerSenal = ShowSignal;
         s.Overlay.EstiloAviso = EstilosAviso[EstiloAvisoIdx];
         _settings.Save();
     }
@@ -462,6 +468,7 @@ public partial class AdminOverlayVm : ObservableObject
             pc.VerPerfil = ShowProfile;
             pc.VerConexion = ShowConnection;
             pc.VerTipo = ShowType;
+            pc.VerSenal = ShowSignal;
             pc.ColorAcento = Accent;
             pc.ColorFondo = Bg;
             pc.EstiloTarjeta = EstilosTarjeta[EstiloTarjetaIdx];
@@ -480,6 +487,7 @@ public partial class AdminOverlayVm : ObservableObject
             s.VerPerfil = ShowProfile;
             s.VerConexion = ShowConnection;
             s.VerTipo = ShowType;
+            s.VerSenal = ShowSignal;
             s.ColorAcento = Accent;
             s.ColorFondo = Bg;
             s.EstiloTarjeta = EstilosTarjeta[EstiloTarjetaIdx];
@@ -505,6 +513,7 @@ public partial class AdminOverlayVm : ObservableObject
             VerFps = o.VerFps,
             VerReloj = o.VerReloj,
             VerTipo = o.VerTipo,
+            VerSenal = o.VerSenal,
             VerAvisos = o.VerAvisos,
             AnclajeHud = o.Anclaje,
             DesvioX = o.PosX,
@@ -535,6 +544,7 @@ public partial class AdminOverlayVm : ObservableObject
             VerPerfil = ShowProfile,
             VerConexion = ShowConnection,
             VerTipo = ShowType,
+            VerSenal = ShowSignal,
             AnclajeHud = Anchors[HudAnchorIdx],
             DesvioX = HudOffX,
             DesvioY = HudOffY,

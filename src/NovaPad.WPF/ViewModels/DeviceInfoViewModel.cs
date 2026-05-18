@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using NovaPad.Core.Interfaces;
 using NovaPad.Core.Models;
 
@@ -11,6 +12,7 @@ public partial class DeviceInfoViewModel : ObservableObject
 {
     private readonly IControllerManagerService _controllers;
     private readonly DispatcherTimer _poll;
+    private CancellationTokenSource? _rumbleCts;
 
     [ObservableProperty]
     private ControllerInfo? _current;
@@ -66,7 +68,18 @@ public partial class DeviceInfoViewModel : ObservableObject
     [ObservableProperty]
     private bool _active;
 
+    [ObservableProperty]
+    private double _rumbleLeft = 0.5;
+
+    [ObservableProperty]
+    private double _rumbleRight = 0.5;
+
+    [ObservableProperty]
+    private bool _rumbleTesting;
+
     public bool Idle => !Active;
+    public bool RumbleSupported => Current?.HasRumble == true;
+    public bool RumbleVisible => Active && RumbleSupported;
 
     public ObservableCollection<ControllerInfo> Pool { get; } = new();
 
@@ -131,11 +144,50 @@ public partial class DeviceInfoViewModel : ObservableObject
         Rate = $"{value.PollingRateHz} Hz";
         Strength = $"{value.SignalStrength * 100:F0}%";
 
+        OnPropertyChanged(nameof(RumbleSupported));
+        OnPropertyChanged(nameof(RumbleVisible));
+
         var elapsed = DateTime.UtcNow - value.FirstSeen;
         Online = $"{(int)elapsed.TotalHours}h {elapsed.Minutes}m";
     }
 
-    partial void OnActiveChanged(bool value) => OnPropertyChanged(nameof(Idle));
+    partial void OnActiveChanged(bool value)
+    {
+        OnPropertyChanged(nameof(Idle));
+        OnPropertyChanged(nameof(RumbleSupported));
+        OnPropertyChanged(nameof(RumbleVisible));
+    }
+
+    [RelayCommand]
+    private async Task TestRumbleAsync()
+    {
+        if (Current == null || !Current.HasRumble) return;
+        RumbleTesting = true;
+        _rumbleCts?.Cancel();
+        _rumbleCts = new CancellationTokenSource();
+        var token = _rumbleCts.Token;
+        try
+        {
+            await _controllers.SetRumbleAsync(Current.Id, RumbleLeft, RumbleRight);
+            await Task.Delay(1500, token);
+            await _controllers.SetRumbleAsync(Current.Id, 0, 0);
+        }
+        catch (TaskCanceledException) { }
+        finally
+        {
+            await _controllers.SetRumbleAsync(Current?.Id ?? "", 0, 0);
+            RumbleTesting = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task StopRumbleAsync()
+    {
+        _rumbleCts?.Cancel();
+        if (Current != null)
+            await _controllers.SetRumbleAsync(Current.Id, 0, 0);
+        RumbleTesting = false;
+    }
 
     private void UpdatePower(ControllerInfo c)
     {

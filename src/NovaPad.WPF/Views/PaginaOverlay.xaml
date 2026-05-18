@@ -429,6 +429,11 @@
                             <ToggleButton Grid.Column="1" IsChecked="{Binding ShowType}" Style="{StaticResource ModernToggleSwitch}"/>
                         </Grid>
                         <Grid Margin="0,0,0,5"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <TextBlock Text="Mostrar señal"
+                                       FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            <ToggleButton Grid.Column="1" IsChecked="{Binding ShowSignal}" Style="{StaticResource ModernToggleSwitch}"/>
+                        </Grid>
+                        <Grid Margin="0,0,0,5"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                             <TextBlock Text="{Binding Source={x:Static svc:LocalizationService.Instance}, Path=[OverlaySettings_ShowNotifs]}"
                                        FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"/>
                             <ToggleButton Grid.Column="1" IsChecked="{Binding ShowNotifs}" Style="{StaticResource ModernToggleSwitch}"/>

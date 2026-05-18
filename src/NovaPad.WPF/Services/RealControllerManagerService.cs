@@ -13,13 +13,17 @@ public class RealControllerManagerService : IControllerManagerService
     public event EventHandler<ControllerInfo>? ControllerDisconnected;
     public event EventHandler<ControllerState>? InputReceived;
     public event EventHandler<ControllerInfo>? ControllerUpdated;
+    public event EventHandler<(string Id, string Name, int Level)>? LowBattery;
 
     private readonly HidService _hidService;
     private readonly IControllerNamingService _naming;
     private readonly IBatteryService _battery;
+    private readonly IAppSettingsService _appSettings;
     private readonly ConcurrentDictionary<string, ControllerInfo> _controllers = new();
     private readonly ConcurrentDictionary<string, ControllerState> _states = new();
     private readonly ConcurrentDictionary<string, PollingTracker> _polling = new();
+    private readonly ConcurrentDictionary<string, BatteryEstimator> _estimators = new();
+    private readonly HashSet<string> _notifiedLowBattery = new();
     private readonly PeriodicTimer? _batteryTimer;
     private CancellationTokenSource? _batteryCts;
     private IReadOnlyList<ControllerInfo>? _cachedConnected;
@@ -38,10 +42,11 @@ public class RealControllerManagerService : IControllerManagerService
         }
     }
 
-    public RealControllerManagerService(IControllerNamingService naming, IBatteryService battery)
+    public RealControllerManagerService(IControllerNamingService naming, IBatteryService battery, IAppSettingsService appSettings)
     {
         _naming = naming;
         _battery = battery;
+        _appSettings = appSettings;
         _naming.Load();
         _hidService = new HidService();
         _hidService.DeviceArrived += OnDeviceArrived;
@@ -68,10 +73,9 @@ public class RealControllerManagerService : IControllerManagerService
                     var result = _battery.GetBatteryLevel(ctrl.VendorId, ctrl.ProductId);
                     if (result != null && result.Level >= 0)
                     {
-                        if (result.Level != ctrl.BatteryLevel)
+                    if (result.Level != ctrl.BatteryLevel || ctrl.IsCharging != result.IsCharging)
                         {
-                            ctrl.BatteryLevel = result.Level;
-                            ctrl.IsCharging = result.IsCharging;
+                            ApplyEstimatedBattery(ctrl, result.Level, result.IsCharging);
                             UpdateBatteryState(ctrl);
                         }
                         continue;
@@ -81,7 +85,7 @@ public class RealControllerManagerService : IControllerManagerService
                     var hidLevel = _hidService.ReadDeviceBattery(ctrl.Id);
                     if (hidLevel.HasValue && hidLevel.Value != ctrl.BatteryLevel)
                     {
-                        ctrl.BatteryLevel = hidLevel.Value;
+                        ApplyEstimatedBattery(ctrl, hidLevel.Value, ctrl.IsCharging);
                         UpdateBatteryState(ctrl);
                     }
                 }
@@ -101,6 +105,23 @@ public class RealControllerManagerService : IControllerManagerService
             state.IsCharging = ctrl.IsCharging;
         }
         ControllerUpdated?.Invoke(this, ctrl);
+        CheckLowBattery(ctrl);
+    }
+
+    private void CheckLowBattery(ControllerInfo ctrl)
+    {
+        if (ctrl.BatteryLevel < 0) return;
+        var notif = _appSettings.Settings.Notifications;
+        if (!notif.ShowBatteryNotifications) return;
+        if (ctrl.BatteryLevel > notif.BatteryWarningThreshold)
+        {
+            _notifiedLowBattery.Remove(ctrl.Id);
+            return;
+        }
+        if (_notifiedLowBattery.Contains(ctrl.Id)) return;
+        if (notif.MutedBatteryAlerts.Contains(ctrl.Id)) return;
+        _notifiedLowBattery.Add(ctrl.Id);
+        LowBattery?.Invoke(this, (ctrl.Id, ctrl.EffectiveName, ctrl.BatteryLevel));
     }
 
     public Task StartDetectionAsync()
@@ -146,7 +167,54 @@ public class RealControllerManagerService : IControllerManagerService
 
     public Task<bool> SetRumbleAsync(string controllerId, double leftMotor, double rightMotor)
     {
-        Log.Warning("[RealControllerManagerService] SetRumbleAsync: not implemented for {Id}", controllerId);
+        if (!_controllers.TryGetValue(controllerId, out var ctrl))
+            return Task.FromResult(false);
+
+        var left = (byte)Math.Clamp(leftMotor * 255, 0, 255);
+        var right = (byte)Math.Clamp(rightMotor * 255, 0, 255);
+        var vid = ctrl.VendorId;
+        var pid = ctrl.ProductId;
+
+        try
+        {
+            // DualSense
+            if (vid == 0x054C && pid is >= 0x0CE6 and <= 0x0E0B)
+            {
+                var report = new byte[64];
+                report[0] = 0x02;
+                report[1] = 0x07;
+                report[9] = right;
+                report[10] = left;
+                report[31] = 0x01;
+                report[32] = 0x01;
+                return Task.FromResult(_hidService.SendOutputReport(controllerId, report));
+            }
+
+            // DualShock 4
+            if (vid == 0x054C && pid is >= 0x09CC and <= 0x0BA0)
+            {
+                if (ctrl.Connection == ConnectionType.Bluetooth)
+                {
+                    var report = new byte[78];
+                    report[0] = 0x11;
+                    report[1] = 0x80;
+                    report[3] = 0x0F;
+                    report[4] = left;
+                    report[7] = right;
+                    return Task.FromResult(_hidService.SendOutputReport(controllerId, report));
+                }
+
+                var usbReport = new byte[32];
+                usbReport[0] = 0x05;
+                usbReport[1] = 0x07;
+                return Task.FromResult(_hidService.SendOutputReport(controllerId, usbReport));
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "[RealControllerManagerService] SetRumbleAsync failed for {Id}", controllerId);
+        }
+
         return Task.FromResult(false);
     }
 
@@ -207,8 +275,7 @@ public class RealControllerManagerService : IControllerManagerService
             var result = _battery.GetBatteryLevel(info.VendorId, info.ProductId);
             if (result != null && result.Level >= 0)
             {
-                info.BatteryLevel = result.Level;
-                info.IsCharging = result.IsCharging;
+                ApplyEstimatedBattery(info, result.Level, result.IsCharging);
                 return;
             }
         }
@@ -222,7 +289,7 @@ public class RealControllerManagerService : IControllerManagerService
             var hidLevel = _hidService.ReadDeviceBattery(info.Id);
             if (hidLevel.HasValue)
             {
-                info.BatteryLevel = hidLevel.Value;
+                ApplyEstimatedBattery(info, hidLevel.Value, info.IsCharging);
             }
         }
         catch (Exception ex)
@@ -252,9 +319,17 @@ public class RealControllerManagerService : IControllerManagerService
         {
             ctrl.IsConnected = false;
             _states.TryRemove(info.Id, out _);
+            _estimators.TryRemove(info.Id, out _);
             _cacheDirty = true;
             ControllerDisconnected?.Invoke(this, ctrl);
         }
+    }
+
+    private void ApplyEstimatedBattery(ControllerInfo ctrl, int rawPercent, bool isCharging)
+    {
+        var estimator = _estimators.GetOrAdd(ctrl.Id, _ => new BatteryEstimator());
+        ctrl.BatteryLevel = estimator.Update(rawPercent, isCharging, DateTime.UtcNow);
+        ctrl.IsCharging = isCharging;
     }
 
     private void OnInputReport(object? sender, ControllerState state)
@@ -267,14 +342,14 @@ public class RealControllerManagerService : IControllerManagerService
 
             if (state.BatteryLevel >= 0)
             {
-                ctrl.BatteryLevel = state.BatteryLevel;
-                ctrl.IsCharging = state.IsCharging;
+                ApplyEstimatedBattery(ctrl, state.BatteryLevel, state.IsCharging);
             }
 
             UpdatePollingRate(ctrl, now);
             UpdateSignalStrength(ctrl, now);
             ctrl.LatencyMs = state.LatencyMs > 0 ? state.LatencyMs : EstimateLatency(ctrl.Id, now);
             ctrl.LastSeen = now;
+            CheckLowBattery(ctrl);
             ControllerUpdated?.Invoke(this, ctrl);
         }
 

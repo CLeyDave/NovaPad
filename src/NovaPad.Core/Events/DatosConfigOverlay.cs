@@ -14,6 +14,7 @@ public class DatosConfigOverlay
     public bool VerFps { get; set; }
     public bool VerReloj { get; set; } = true;
     public bool VerTipo { get; set; } = true;
+    public bool VerSenal { get; set; } = true;
     public string AnclajeHud { get; set; } = "TopRight";
     public double DesvioX { get; set; } = 20;
     public double DesvioY { get; set; } = 20;

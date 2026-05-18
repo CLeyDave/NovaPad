@@ -58,6 +58,7 @@ public partial class MainViewModel : ObservableObject
         _controllerManager.ControllerConnected += OnControllerConnected;
         _controllerManager.ControllerDisconnected += OnControllerDisconnected;
         _controllerManager.InputReceived += OnInputReceived;
+        _controllerManager.LowBattery += OnLowBattery;
 
         _batteryTimer = new DispatcherTimer
         {
@@ -198,6 +199,21 @@ public partial class MainViewModel : ObservableObject
             && (DateTime.UtcNow - n.Timestamp).TotalSeconds < 4);
     }
 
+    private void OnLowBattery(object? sender, (string Id, string Name, int Level) e)
+    {
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        {
+            var notification = new NotificationMessage
+            {
+                Title = "Batería baja",
+                Message = $"{e.Name} — {e.Level}%",
+                Type = NotificationType.BatteryLow,
+                Duration = TimeSpan.FromSeconds(6)
+            };
+            Notifications.Add(notification);
+        });
+    }
+
     private void OnControllerConnected(object? sender, ControllerInfo e)
     {
         System.Windows.Application.Current.Dispatcher.Invoke(() =>
@@ -330,6 +346,7 @@ public partial class MainViewModel : ObservableObject
                     Conectado = c.IsConnected,
                     LatenciaMs = c.LatencyMs,
                     Hz = c.PollingRateHz,
+                    Senal = c.SignalStrength,
                     PerfilActivo = string.IsNullOrEmpty(c.AssignedProfileId) ? null : c.AssignedProfileId,
                     TipoMando = c.Type.ToString()
                 }).ToList()

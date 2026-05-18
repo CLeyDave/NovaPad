@@ -12,6 +12,7 @@ public class OverlayCardConfig
     public bool VerPerfil { get; set; } = true;
     public bool VerConexion { get; set; } = true;
     public bool VerTipo { get; set; } = true;
+    public bool VerSenal { get; set; } = true;
     public string? AnclajeHud { get; set; }
     public double? DesvioX { get; set; }
     public double? DesvioY { get; set; }

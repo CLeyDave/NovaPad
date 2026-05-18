@@ -105,6 +105,23 @@ public class HidService : IDisposable
         return null;
     }
 
+    public bool SendOutputReport(string deviceId, byte[] report)
+    {
+        if (!_sessions.TryGetValue(deviceId, out var session)) return false;
+        try
+        {
+            if (session.Stream != null)
+            {
+                session.Stream.Write(report);
+                return true;
+            }
+            using var fallback = session.Device.Open();
+            fallback.Write(report);
+            return true;
+        }
+        catch { return false; }
+    }
+
     public Task StartAsync()
     {
         if (_monitorCts != null) return Task.CompletedTask;
@@ -462,6 +479,7 @@ public class HidService : IDisposable
             MaxFeatureReportLength = maxFeature,
             PollingRateHz = 250,
             HasBattery = true,
+            HasRumble = type is ControllerType.DualSense or ControllerType.DualShock4,
             HasLed = type is ControllerType.DualSense or ControllerType.DualShock4,
             FirstSeen = DateTime.UtcNow,
             LastSeen = DateTime.UtcNow

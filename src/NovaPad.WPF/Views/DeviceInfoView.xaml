@@ -231,6 +231,62 @@
                         </StackPanel>
                     </Grid>
                 </Border>
+                <!-- Vibration Test -->
+                <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16"
+                        Visibility="{Binding RumbleVisible, Converter={StaticResource BoolToVis}}">
+                    <StackPanel>
+                        <TextBlock Text="Vibración"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource TextDisabledBrush}"
+                                   Margin="0,0,0,12"/>
+                        <Grid Margin="0,0,0,8">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="60"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Izquierdo"
+                                       FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center"/>
+                            <Slider Grid.Row="0" Grid.Column="1" Value="{Binding RumbleLeft}"
+                                    Minimum="0" Maximum="1" TickFrequency="0.05"
+                                    Style="{StaticResource ModernSliderStyle}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Derecho"
+                                       FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center" Margin="0,4,0,0"/>
+                            <Slider Grid.Row="1" Grid.Column="1" Value="{Binding RumbleRight}"
+                                    Minimum="0" Maximum="1" TickFrequency="0.05"
+                                    Style="{StaticResource ModernSliderStyle}" Margin="0,4,0,0"/>
+                        </Grid>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Content="Probar"
+                                    Command="{Binding TestRumbleCommand}"
+                                    Background="{DynamicResource PrimaryBrush}"
+                                    Foreground="White"
+                                    BorderThickness="0"
+                                    Cursor="Hand"
+                                    Padding="0,10"
+                                    FontSize="13" FontWeight="SemiBold"
+                                    Margin="0,0,6,0"/>
+                            <Button Grid.Column="1" Content="Detener"
+                                    Command="{Binding StopRumbleCommand}"
+                                    Background="#EF5350"
+                                    Foreground="White"
+                                    BorderThickness="0"
+                                    Cursor="Hand"
+                                    Padding="0,10"
+                                    FontSize="13" FontWeight="SemiBold"
+                                    Margin="6,0,0,0"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
             </StackPanel>
 
             <!-- Empty -->

@@ -46,4 +46,5 @@ public class NotificationSettings
     public int BatteryWarningThreshold { get; set; } = 20;
     public bool ShowConnectionNotifications { get; set; } = true;
     public bool ShowBatteryNotifications { get; set; } = true;
+    public List<string> MutedBatteryAlerts { get; set; } = new();
 }

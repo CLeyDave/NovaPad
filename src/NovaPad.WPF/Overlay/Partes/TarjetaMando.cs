@@ -50,6 +50,7 @@ public class TarjetaMando
     private bool _verPerfil = true;
     private bool _verConexion = true;
     private bool _verTipo = true;
+    private bool _verSenal = true;
     private string _acentoHex = "#00BCD4";
 
     public UIElement Vista => _cajon;
@@ -762,6 +763,9 @@ public class TarjetaMando
         if (_verTipo && !string.IsNullOrEmpty(datos.TipoMando))
             partes.Add(datos.TipoMando);
 
+        if (_verSenal)
+            partes.Add($"📶 {datos.Senal * 100:F0}%");
+
         _detalles!.Text = partes.Count > 0 ? string.Join(" · ", partes) : "";
     }
 
@@ -795,6 +799,9 @@ public class TarjetaMando
             partes.Add($"Perfil: {datos.PerfilActivo}");
         if (_verTipo && !string.IsNullOrEmpty(datos.TipoMando))
             partes.Add(datos.TipoMando);
+
+        if (_verSenal)
+            partes.Add($"📶 {datos.Senal * 100:F0}%");
 
         _detalles!.Text = partes.Count > 0 ? string.Join(" · ", partes) : "";
     }
@@ -832,6 +839,9 @@ public class TarjetaMando
             partes.Add($"hz:{datos.Hz}");
         if (_verPerfil && !string.IsNullOrEmpty(datos.PerfilActivo))
             partes.Add($"pf:{datos.PerfilActivo}");
+
+        if (_verSenal)
+            partes.Add($"sig:{(int)(datos.Senal * 100)}%");
 
         _detalles!.Text = partes.Count > 0 ? "> " + string.Join(" | ", partes) : "";
     }
@@ -931,11 +941,13 @@ public class TarjetaMando
             detalles.Add($"Perfil: {datos.PerfilActivo}");
         if (_verTipo && !string.IsNullOrEmpty(datos.TipoMando))
             detalles.Add(datos.TipoMando);
+        if (_verSenal)
+            detalles.Add($"📶 {datos.Senal * 100:F0}%");
         _detalles!.Text = detalles.Count > 0 ? string.Join(" · ", detalles) : "";
     }
 
     public void Reconfigurar(string hexAcento, string hexFondo, double escala,
-        bool verBateria, bool verLatencia, bool verFrecuencia, bool verPerfil, bool verConexion, bool verTipo)
+        bool verBateria, bool verLatencia, bool verFrecuencia, bool verPerfil, bool verConexion, bool verTipo, bool verSenal = true)
     {
         _acentoHex = hexAcento;
         _bgHex = hexFondo;
@@ -946,6 +958,7 @@ public class TarjetaMando
         _verPerfil = verPerfil;
         _verConexion = verConexion;
         _verTipo = verTipo;
+        _verSenal = verSenal;
 
         if (_estilo != EstiloTarjeta.Minimal && _estilo != EstiloTarjeta.Terminal && _estilo != EstiloTarjeta.InputVisualizer && _estilo != EstiloTarjeta.Linea)
             _cajon.Background = DisenadorColores.CrearFondo(hexFondo);
@@ -980,7 +993,7 @@ public class TarjetaMando
 
     }
 
-    public void Reconfigurar(OverlayCardConfig cfg, double escala)
+    public void Reconfigurar(OverlayCardConfig cfg, double escala, bool verSenal = true)
     {
         if (!string.IsNullOrEmpty(cfg.ColorAcento))
             _acentoHex = cfg.ColorAcento;
@@ -993,6 +1006,7 @@ public class TarjetaMando
         _verPerfil = cfg.VerPerfil;
         _verConexion = cfg.VerConexion;
         _verTipo = cfg.VerTipo;
+        _verSenal = verSenal;
 
         if (_estilo != EstiloTarjeta.Minimal && _estilo != EstiloTarjeta.Terminal && _estilo != EstiloTarjeta.InputVisualizer && _estilo != EstiloTarjeta.Linea)
             _cajon.Background = DisenadorColores.CrearFondo(_bgHex);

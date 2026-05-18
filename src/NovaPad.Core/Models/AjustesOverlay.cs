@@ -21,6 +21,7 @@ public class AjustesOverlay
     public bool VerFrecuencia { get; set; }
     public bool VerFps { get; set; }
     public bool VerReloj { get; set; } = true;
+    public bool VerSenal { get; set; } = true;
     public string Tema { get; set; } = "Dark";
     public string Anclaje { get; set; } = "TopRight";
     public bool VerAvisos { get; set; } = true;

@@ -47,6 +47,7 @@ public class VentanaFondo : Window, IOverlayService
     private bool _verFps;
     private bool _verReloj = true;
     private bool _verTipo = true;
+    private bool _verSenal = true;
     private bool _verAvisos = true;
     private double _duracionAviso = 3.0;
 
@@ -271,6 +272,7 @@ public class VentanaFondo : Window, IOverlayService
         _verFps = cfg.VerFps;
         _verReloj = cfg.VerReloj;
         _verTipo = cfg.VerTipo;
+        _verSenal = cfg.VerSenal;
         _verAvisos = cfg.VerAvisos;
 
         if (_depu != null)
@@ -309,7 +311,7 @@ public class VentanaFondo : Window, IOverlayService
         {
             var t = kv.Value;
             t.Reconfigurar(_acentoHex, cfg.ColorFondo, _escala,
-                _verBateria, _verLatencia, _verFrecuencia, _verPerfil, _verConexion, _verTipo);
+                _verBateria, _verLatencia, _verFrecuencia, _verPerfil, _verConexion, _verTipo, _verSenal);
         }
 
         ReposicionarTarjetas();
@@ -328,7 +330,7 @@ public class VentanaFondo : Window, IOverlayService
             }
             else
             {
-                tarjeta.Reconfigurar(cfg, _escala);
+                tarjeta.Reconfigurar(cfg, _escala, cfg.VerSenal);
             }
         }
         ReposicionarTarjetas();
@@ -425,7 +427,7 @@ public class VentanaFondo : Window, IOverlayService
                     }
                     else
                     {
-                        tarjeta.Reconfigurar(cardCfg, _escala);
+                        tarjeta.Reconfigurar(cardCfg, _escala, cardCfg.VerSenal);
                     }
                 }
             }
@@ -548,7 +550,7 @@ public class VentanaFondo : Window, IOverlayService
     {
         var t = new TarjetaMando(_acentoHex, _estiloTarjeta);
         t.Reconfigurar(_acentoHex, _bgHex, _escala,
-            _verBateria, _verLatencia, _verFrecuencia, _verPerfil, _verConexion, _verTipo);
+            _verBateria, _verLatencia, _verFrecuencia, _verPerfil, _verConexion, _verTipo, _verSenal);
         return t;
     }
 
@@ -556,7 +558,7 @@ public class VentanaFondo : Window, IOverlayService
     {
         Lienzo.Children.Remove(vieja.Vista);
         var nueva = new TarjetaMando(cfg.ColorAcento, estilo);
-        nueva.Reconfigurar(cfg, _escala);
+        nueva.Reconfigurar(cfg, _escala, cfg.VerSenal);
         _tarjetasPorId[id] = nueva;
         Lienzo.Children.Add(nueva.Vista);
     }

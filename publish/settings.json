@@ -1,0 +1,55 @@
+{
+  "Theme": {
+    "IsDark": true,
+    "AccentColor": "#00BCD4"
+  },
+  "Window": {
+    "Left": 0,
+    "Top": 0,
+    "Width": 1280,
+    "Height": 820,
+    "IsMaximized": true,
+    "SidebarExpanded": true
+  },
+  "Overlay": {
+    "Activado": true,
+    "PosX": 20,
+    "PosY": 20,
+    "Opacidad": 0.8,
+    "Escala": 1,
+    "Traspasar": true,
+    "SiempreArriba": true,
+    "VerBateria": true,
+    "VerTipo": true,
+    "VerLatencia": true,
+    "VerEntradas": true,
+    "VerPerfil": true,
+    "VerConexion": true,
+    "VerFrecuencia": false,
+    "VerFps": false,
+    "VerReloj": true,
+    "Tema": "Dark",
+    "Anclaje": "TopRight",
+    "VerAvisos": true,
+    "AnclajeAvisos": "BottomRight",
+    "DesvioAvisoX": 20,
+    "DesvioAvisoY": 10,
+    "ColorAcento": "#00BCD4",
+    "TamanoLetra": 1,
+    "ColorFondo": "#111111",
+    "EstiloTarjeta": "Clasico",
+    "EstiloAviso": "Clasica",
+    "PorMando": {}
+  },
+  "Notifications": {
+    "DurationSeconds": 3,
+    "BatteryWarningThreshold": 20,
+    "ShowConnectionNotifications": true,
+    "ShowBatteryNotifications": true
+  },
+  "RgbState": {},
+  "InputProcessing": {},
+  "StartWithWindows": false,
+  "MinimizeToTray": false,
+  "Language": "es"
+}
