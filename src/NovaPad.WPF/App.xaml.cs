@@ -239,30 +239,31 @@ public partial class App
                                 var tag = updater.LatestRelease?.TagName ?? "desconocida";
                                 Log.Information("[Background] Update available: {Tag}", tag);
 
-                                await Application.Current.Dispatcher.InvokeAsync(async () =>
+                                var result = false;
+                                var choice = Views.UpdateChoice.Later;
+
+                                await Application.Current.Dispatcher.InvokeAsync(() =>
                                 {
                                     var dialog = new Views.UpdatePromptWindow(tag);
                                     dialog.Owner = mainWindow;
                                     dialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-                                    var result = dialog.ShowDialog();
-
-                                    if (result == true)
-                                    {
-                                        switch (dialog.Choice)
-                                        {
-                                            case Views.UpdateChoice.DownloadInstall:
-                                                Log.Information("[Background] User chose download & install");
-                                                await updater.DownloadUpdateAsync();
-                                                if (updater.Status == Services.UpdateStatus.ReadyToInstall)
-                                                    updater.InstallUpdate();
-                                                break;
-                                            case Views.UpdateChoice.DownloadOnly:
-                                                Log.Information("[Background] User chose download only");
-                                                await updater.DownloadUpdateAsync();
-                                                break;
-                                        }
-                                    }
+                                    var dr = dialog.ShowDialog();
+                                    result = dr == true;
+                                    choice = dialog.Choice;
                                 });
+
+                                if (result)
+                                {
+                                    Log.Information("[Background] User chose {Choice}", choice);
+                                    await updater.DownloadUpdateAsync();
+
+                                    if (choice == Views.UpdateChoice.DownloadInstall &&
+                                        updater.Status == Services.UpdateStatus.ReadyToInstall)
+                                    {
+                                        await Application.Current.Dispatcher.InvokeAsync(() =>
+                                            updater.InstallUpdate());
+                                    }
+                                }
                             }
                             else if (updater.Status == Services.UpdateStatus.UpToDate)
                             {
