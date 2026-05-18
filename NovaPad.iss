@@ -36,7 +36,7 @@ Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 Name: "desktopicon"; Description: "Crear acceso directo en el escritorio"; GroupDescription: "Accesos directos:"
 
 [Files]
-Source: "C:\Users\USUARIO\AppData\Local\Temp\opencode\novapad-publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "C:\Users\USUARIO\Documents\CODEME\Mando\publish_beta\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\NovaPad"; Filename: "{app}\{#MyAppExeName}"
