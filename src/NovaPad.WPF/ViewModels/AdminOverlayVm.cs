@@ -25,6 +25,7 @@ public partial class AdminOverlayVm : ObservableObject
     private readonly INotificationService _notifications;
     private bool _loading;
     private bool _starting;
+    private readonly Dictionary<string, bool> _prevGuideStates = new();
 
     [ObservableProperty] private double _opacity = 0.8;
     [ObservableProperty] private double _scale = 1.0;
@@ -41,6 +42,7 @@ public partial class AdminOverlayVm : ObservableObject
     [ObservableProperty] private bool _showNotifs = true;
     [ObservableProperty] private bool _showConnectionNotifications = true;
     [ObservableProperty] private bool _showBatteryNotifications = true;
+    [ObservableProperty] private bool _autoStart = true;
     [ObservableProperty] private string _statusText = "Detenido";
     [ObservableProperty] private bool _canStart = true;
     [ObservableProperty] private bool _canStop;
@@ -123,6 +125,22 @@ public partial class AdminOverlayVm : ObservableObject
         _controllers.ControllerConnected += (_, _) => { RefrescarOpciones(); PushHudIfActive(); };
         _controllers.ControllerDisconnected += (_, _) => { RefrescarOpciones(); PushHudIfActive(); };
         _controllers.ControllerUpdated += (_, _) => PushHudIfActive();
+        _controllers.InputReceived += (_, state) =>
+        {
+            if (state.Guide && !_prevGuideStates.GetValueOrDefault(state.ControllerId))
+                System.Windows.Application.Current.Dispatcher.Invoke(() => _overlay.TogglePanel());
+            _prevGuideStates[state.ControllerId] = state.Guide;
+        };
+        var _lastPush = System.DateTime.MinValue;
+        _controllers.InputReceived += (_, _) =>
+        {
+            var now = System.DateTime.UtcNow;
+            if ((now - _lastPush).TotalMilliseconds >= 33)
+            {
+                _lastPush = now;
+                PushHudIfActive();
+            }
+        };
         RefrescarOpciones();
         RefreshSettings();
         RefreshStatus();
@@ -173,6 +191,7 @@ public partial class AdminOverlayVm : ObservableObject
     partial void OnShowNotifsChanged(bool value) { if (_loading) return; SaveGlobal(); PushCfg(); PushHud(); }
     partial void OnShowConnectionNotificationsChanged(bool value) { if (_loading) return; SaveGlobal(); }
     partial void OnShowBatteryNotificationsChanged(bool value) { if (_loading) return; SaveGlobal(); }
+    partial void OnAutoStartChanged(bool value) { if (_loading) return; SaveGlobal(); }
     partial void OnScaleChanged(double value) { if (_loading) return; GuardarPosicionYEnviar(); }
     partial void OnHudAnchorIdxChanged(int value) { if (_loading) return; GuardarPosicionYEnviar(); }
     partial void OnHudOffXChanged(double value) { if (_loading) return; GuardarPosicionYEnviar(); }
@@ -226,6 +245,7 @@ public partial class AdminOverlayVm : ObservableObject
         HudOffY = s.Overlay.PosY;
         var idx = System.Array.IndexOf(Anchors, s.Overlay.Anclaje);
         HudAnchorIdx = idx >= 0 ? idx : 0;
+        AutoStart = s.Overlay.AutoStart;
         ShowNotifs = s.Overlay.VerAvisos;
         ShowConnectionNotifications = s.Notifications.ShowConnectionNotifications;
         ShowBatteryNotifications = s.Notifications.ShowBatteryNotifications;
@@ -453,6 +473,7 @@ public partial class AdminOverlayVm : ObservableObject
         s.Overlay.VerReloj = ShowClock;
         s.Overlay.VerSenal = ShowSignal;
         s.Overlay.EstiloAviso = EstilosAviso[EstiloAvisoIdx];
+        s.Overlay.AutoStart = AutoStart;
         _settings.Save();
     }
 
@@ -573,8 +594,6 @@ public partial class AdminOverlayVm : ObservableObject
                 .Select(c =>
                 {
                     var state = _controllers.GetCurrentState(c.Id);
-                    if (state != null)
-                        state = _inputProcessing.ProcessRawInput(state, c.AssignedProfileId ?? "");
                     return new InfoMando
                     {
                         Id = c.Id,

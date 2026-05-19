@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -14,6 +15,9 @@ public class PanelExtendido
     private readonly StackPanel _lista;
     private readonly TextBlock _mensajeVacio;
     private readonly TextBlock _relojTexto;
+    private readonly TextBlock _pcBatteryTexto;
+    private readonly DispatcherTimer _batteryTimer;
+    private readonly PanelControlMultimedia _mediaControl;
     private readonly DispatcherTimer _temporizador;
     private bool _visible;
 
@@ -38,6 +42,20 @@ public class PanelExtendido
         _temporizador.Start();
         RefrescarReloj();
 
+        _pcBatteryTexto = new TextBlock
+        {
+            FontSize = 11,
+            Foreground = DisenadorColores.CrearTextoSecundario(),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(0, 2, 0, 8)
+        };
+        _batteryTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
+        _batteryTimer.Tick += (_, _) => RefrescarBateriaPC();
+        _batteryTimer.Start();
+        RefrescarBateriaPC();
+
+        _mediaControl = new PanelControlMultimedia(hexAcento);
+
         _mensajeVacio = new TextBlock
         {
             Text = "Sin mandos",
@@ -57,6 +75,13 @@ public class PanelExtendido
             Margin = new Thickness(0, 8, 0, 12)
         };
 
+        var lineaMedia = new Border
+        {
+            Height = 1,
+            Background = DisenadorColores.CrearBorde(),
+            Margin = new Thickness(0, 8, 0, 12)
+        };
+
         var titulo = new TextBlock
         {
             Text = "Panel de Control",
@@ -69,7 +94,10 @@ public class PanelExtendido
 
         var pila = new StackPanel();
         pila.Children.Add(_relojTexto);
+        pila.Children.Add(_pcBatteryTexto);
         pila.Children.Add(linea);
+        pila.Children.Add(_mediaControl.Vista);
+        pila.Children.Add(lineaMedia);
         pila.Children.Add(titulo);
         pila.Children.Add(_lista);
 
@@ -99,7 +127,33 @@ public class PanelExtendido
 
     private void RefrescarReloj()
     {
-        _relojTexto.Text = DateTime.Now.ToString("HH:mm:ss");
+        _relojTexto.Text = DateTime.Now.ToString("h:mm:ss");
+    }
+
+    [DllImport("kernel32.dll")]
+    private static extern bool GetSystemPowerStatus(out SYSTEM_POWER_STATUS sps);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct SYSTEM_POWER_STATUS
+    {
+        public byte ACLineStatus;
+        public byte BatteryFlag;
+        public byte BatteryLifePercent;
+        public byte Reserved1;
+        public int BatteryLifeTime;
+        public int BatteryFullLifeTime;
+    }
+
+    private void RefrescarBateriaPC()
+    {
+        if (GetSystemPowerStatus(out var sps))
+        {
+            var nivel = sps.BatteryLifePercent;
+            if (nivel > 100) nivel = 100;
+            var cargando = sps.ACLineStatus == 1;
+            var icono = cargando ? "\u26A1" : (nivel <= 20 ? "\uD83E\uDEAB" : "\uD83D\uDD0B");
+            _pcBatteryTexto.Text = $"{icono} PC: {nivel}%{(cargando ? " (cargando)" : "")}";
+        }
     }
 
     public bool Alternar()
@@ -131,6 +185,7 @@ public class PanelExtendido
     {
         _marco.Background = DisenadorColores.CrearFondo(hexFondo);
         _relojTexto.Foreground = DisenadorColores.CrearAcento(hexAcento);
+        _mediaControl.CambiarAcento(hexAcento);
     }
 
     public void Actualizar(List<InfoMando> mandos)
@@ -200,5 +255,7 @@ public class PanelExtendido
     public void Detener()
     {
         _temporizador.Stop();
+        _batteryTimer.Stop();
+        _mediaControl.Detener();
     }
 }

@@ -186,7 +186,7 @@ public partial class App
 
                         // Restore overlay auto-start (independent of scan result)
                         Log.Information("[Background] Auto-start check: Activado={Activado}", settings.Settings.Overlay.Activado);
-                        if (settings.Settings.Overlay.Activado)
+                        if (settings.Settings.Overlay.AutoStart)
                         {
                             Log.Information("[Background] Restoring overlay (auto-start)...");
                             try

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using Windows.Gaming.Input;
 using NovaPad.Core.Enums;
 using NovaPad.Core.Interfaces;
 using NovaPad.Core.Models;
@@ -25,7 +26,10 @@ public class RealControllerManagerService : IControllerManagerService
     private readonly ConcurrentDictionary<string, BatteryEstimator> _estimators = new();
     private readonly HashSet<string> _notifiedLowBattery = new();
     private readonly PeriodicTimer? _batteryTimer;
+    private readonly PeriodicTimer? _inputTimer;
+    private readonly Dictionary<string, (Gamepad gamepad, RawGameController raw)> _winGamepads = new();
     private CancellationTokenSource? _batteryCts;
+    private CancellationTokenSource? _inputCts;
     private IReadOnlyList<ControllerInfo>? _cachedConnected;
     private bool _cacheDirty = true;
 
@@ -53,12 +57,15 @@ public class RealControllerManagerService : IControllerManagerService
         _hidService.DeviceRemoved += OnDeviceRemoved;
         _hidService.InputReport += OnInputReport;
 
+        _batteryCts = new CancellationTokenSource();
+        _inputCts = new CancellationTokenSource();
         if (_battery.IsAvailable)
         {
-            _batteryCts = new CancellationTokenSource();
             _batteryTimer = new PeriodicTimer(TimeSpan.FromSeconds(10));
             _ = PollBatteryAsync(_batteryCts.Token);
         }
+        _inputTimer = new PeriodicTimer(TimeSpan.FromMilliseconds(8));
+        _ = PollWinGamepadAsync(_inputCts.Token);
     }
 
     private async Task PollBatteryAsync(CancellationToken ct)
@@ -94,6 +101,97 @@ public class RealControllerManagerService : IControllerManagerService
                     Log.Warning(ex, "[RealControllerManagerService] PollBatteryAsync failed for {Id}", ctrl.Id);
                 }
             }
+        }
+    }
+
+    private async Task PollWinGamepadAsync(CancellationToken ct)
+    {
+        while (await _inputTimer!.WaitForNextTickAsync(ct))
+        {
+            try
+            {
+                var gamepadList = Gamepad.Gamepads.ToList();
+                var rawList = RawGameController.RawGameControllers.ToList();
+                var controllerList = _controllers.Values.Where(c => c.IsConnected).ToList();
+
+                _winGamepads.Clear();
+                for (int i = 0; i < Math.Min(gamepadList.Count, controllerList.Count); i++)
+                {
+                    var raw = i < rawList.Count ? rawList[i] : null;
+                    _winGamepads[controllerList[i].Id] = (gamepadList[i], raw!);
+                }
+
+                foreach (var (id, (gamepad, raw)) in _winGamepads)
+                {
+                    var reading = gamepad.GetCurrentReading();
+
+                    var prev = _states.GetValueOrDefault(id);
+                    var state = new ControllerState { ControllerId = id };
+                    if (prev != null)
+                    {
+                        state.BatteryLevel = prev.BatteryLevel;
+                        state.IsCharging = prev.IsCharging;
+                    }
+                    state.LeftStickX = reading.LeftThumbstickX;
+                    state.LeftStickY = -reading.LeftThumbstickY;
+                    state.RightStickX = reading.RightThumbstickX;
+                    state.RightStickY = -reading.RightThumbstickY;
+                    state.LeftTrigger = reading.LeftTrigger;
+                    state.RightTrigger = reading.RightTrigger;
+                    state.A = (reading.Buttons & GamepadButtons.A) != 0;
+                    state.B = (reading.Buttons & GamepadButtons.B) != 0;
+                    state.X = (reading.Buttons & GamepadButtons.X) != 0;
+                    state.Y = (reading.Buttons & GamepadButtons.Y) != 0;
+                    state.LeftBumper = (reading.Buttons & GamepadButtons.LeftShoulder) != 0;
+                    state.RightBumper = (reading.Buttons & GamepadButtons.RightShoulder) != 0;
+                    state.Back = (reading.Buttons & GamepadButtons.View) != 0;
+                    state.Start = (reading.Buttons & GamepadButtons.Menu) != 0;
+                    state.LeftStickClick = (reading.Buttons & GamepadButtons.LeftThumbstick) != 0;
+                    state.RightStickClick = (reading.Buttons & GamepadButtons.RightThumbstick) != 0;
+                    state.DPadUp = (reading.Buttons & GamepadButtons.DPadUp) != 0;
+                    state.DPadDown = (reading.Buttons & GamepadButtons.DPadDown) != 0;
+                    state.DPadLeft = (reading.Buttons & GamepadButtons.DPadLeft) != 0;
+                    state.DPadRight = (reading.Buttons & GamepadButtons.DPadRight) != 0;
+
+                    state.Guide = raw != null ? LeerGuideDesdeRaw(raw) : false;
+
+                    _states[id] = state;
+                    InputReceived?.Invoke(this, state);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "[RealControllerManagerService] PollWinGamepadAsync failed");
+            }
+        }
+    }
+
+    private static bool LeerGuideDesdeRaw(RawGameController raw)
+    {
+        try
+        {
+            var btns = new bool[raw.ButtonCount];
+            var switches = new GameControllerSwitchPosition[raw.SwitchCount];
+            var axes = new double[raw.AxisCount];
+            raw.GetCurrentReading(btns, switches, axes);
+
+            var guideIdx = -1;
+            for (int i = 0; i < raw.ButtonCount; i++)
+            {
+                var label = (int)raw.GetButtonLabel(i);
+                if (label == 4) { guideIdx = i; break; }
+            }
+
+            if (guideIdx >= 0) return btns[guideIdx];
+
+            for (int i = raw.ButtonCount - 1; i >= 10; i--)
+                if (btns[i]) return true;
+
+            return false;
+        }
+        catch
+        {
+            return false;
         }
     }
 
@@ -138,6 +236,7 @@ public class RealControllerManagerService : IControllerManagerService
     {
         _hidService.StopAsync();
         _batteryCts?.Cancel();
+        _inputCts?.Cancel();
         return Task.CompletedTask;
     }
 
@@ -334,7 +433,15 @@ public class RealControllerManagerService : IControllerManagerService
 
     private void OnInputReport(object? sender, ControllerState state)
     {
-        _states[state.ControllerId] = state;
+        if (_states.TryGetValue(state.ControllerId, out var existing) && state.BatteryLevel >= 0)
+        {
+            existing.BatteryLevel = state.BatteryLevel;
+            existing.IsCharging = state.IsCharging;
+        }
+        else if (state.BatteryLevel >= 0)
+        {
+            _states[state.ControllerId] = state;
+        }
 
         if (_controllers.TryGetValue(state.ControllerId, out var ctrl))
         {
@@ -352,8 +459,6 @@ public class RealControllerManagerService : IControllerManagerService
             CheckLowBattery(ctrl);
             ControllerUpdated?.Invoke(this, ctrl);
         }
-
-        InputReceived?.Invoke(this, state);
     }
 
     private void UpdatePollingRate(ControllerInfo ctrl, DateTime now)

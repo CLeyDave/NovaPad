@@ -77,6 +77,7 @@ public class VentanaFondo : Window, IOverlayService
 
     private const int GWL_EXSTYLE = -20;
     private const int WS_EX_TRANSPARENT = 0x00000020;
+    private const int WS_EX_TOOLWINDOW = 0x00000080;
 
     public VentanaFondo()
     {
@@ -191,7 +192,7 @@ public class VentanaFondo : Window, IOverlayService
         source?.AddHook(WndProc);
 
         var exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
-        SetWindowLong(hwnd, GWL_EXSTYLE, exStyle | WS_EX_TRANSPARENT);
+        SetWindowLong(hwnd, GWL_EXSTYLE, exStyle | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW);
 
         RegisterHotKey(hwnd, IdHotkey, MOD_CONTROL | MOD_SHIFT, VK_O);
         RegisterHotKey(hwnd, IdHotkeyUpdate, MOD_CONTROL | MOD_SHIFT, VK_P);

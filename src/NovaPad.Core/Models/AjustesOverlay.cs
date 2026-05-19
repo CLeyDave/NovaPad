@@ -6,6 +6,7 @@ namespace NovaPad.Core.Models;
 public class AjustesOverlay
 {
     public bool Activado { get; set; } = true;
+    public bool AutoStart { get; set; } = true;
     public double PosX { get; set; } = 20;
     public double PosY { get; set; } = 20;
     public double Opacidad { get; set; } = 0.8;

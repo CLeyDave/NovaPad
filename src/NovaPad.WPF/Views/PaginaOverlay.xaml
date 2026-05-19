@@ -123,6 +123,17 @@
                                 <TextBlock Text="{Binding StatusText}" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </StackPanel>
                         </Grid>
+
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Iniciar automáticamente"
+                                       FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            <ToggleButton Grid.Column="1" IsChecked="{Binding AutoStart}"
+                                          Style="{StaticResource ModernToggleSwitch}"/>
+                        </Grid>
                     </StackPanel>
                 </Border>
 

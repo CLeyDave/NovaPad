@@ -40,6 +40,7 @@ public class TarjetaMando
     private Border? _trkL2, _nvlL2, _trkR2, _nvlR2;
     private TextBlock? _txtL2, _txtR2;
     private Border? _btnA, _btnB, _btnX, _btnY;
+    private Border? _btnUp, _btnDown, _btnLeft, _btnRight, _btnLB, _btnRB;
     private TextBlock? _textoPorcentaje;
 
     private string _bgHex = "#222222";
@@ -483,63 +484,81 @@ public class TarjetaMando
         _dotIzq = new Border { Width = 8, Height = 8, CornerRadius = new CornerRadius(4), Background = DisenadorColores.CrearAcento(_acentoHex) };
         _stickIzq = new Canvas { Width = 50, Height = 50 };
         _stickIzq.Background = new SolidColorBrush(Color.FromArgb(30, 0xFF, 0xFF, 0xFF));
+        _stickIzq.Clip = new EllipseGeometry { Center = new Point(25, 25), RadiusX = 25, RadiusY = 25 };
+        Canvas.SetLeft(_dotIzq, 21);
+        Canvas.SetTop(_dotIzq, 21);
         _stickIzq.Children.Add(_dotIzq);
 
         _dotDer = new Border { Width = 8, Height = 8, CornerRadius = new CornerRadius(4), Background = DisenadorColores.CrearAcento(_acentoHex) };
         _stickDer = new Canvas { Width = 50, Height = 50 };
         _stickDer.Background = new SolidColorBrush(Color.FromArgb(30, 0xFF, 0xFF, 0xFF));
+        _stickDer.Clip = new EllipseGeometry { Center = new Point(25, 25), RadiusX = 25, RadiusY = 25 };
+        Canvas.SetLeft(_dotDer, 21);
+        Canvas.SetTop(_dotDer, 21);
         _stickDer.Children.Add(_dotDer);
-
-        var filaSticks = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 4) };
-        filaSticks.Children.Add(_stickIzq);
-        filaSticks.Children.Add(new TextBlock { Text = "  ", FontSize = 10 });
-        filaSticks.Children.Add(_stickDer);
 
         _nvlL2 = new Border { Height = 6, CornerRadius = new CornerRadius(3), Background = DisenadorColores.CrearAcento(_acentoHex), HorizontalAlignment = HorizontalAlignment.Left, Width = 0 };
         _trkL2 = new Border { Height = 6, CornerRadius = new CornerRadius(3), Background = new SolidColorBrush(Color.FromArgb(60, 0xFF, 0xFF, 0xFF)), MinWidth = 60, Child = _nvlL2 };
-        _txtL2 = new TextBlock { FontSize = 9, Foreground = DisenadorColores.CrearTextoSecundario(), Text = "L2", VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(4, 0, 0, 0) };
+        _txtL2 = new TextBlock { FontSize = 9, Foreground = DisenadorColores.CrearTextoSecundario(), Text = "L2", VerticalAlignment = VerticalAlignment.Center };
 
         _nvlR2 = new Border { Height = 6, CornerRadius = new CornerRadius(3), Background = DisenadorColores.CrearAcento(_acentoHex), HorizontalAlignment = HorizontalAlignment.Left, Width = 0 };
         _trkR2 = new Border { Height = 6, CornerRadius = new CornerRadius(3), Background = new SolidColorBrush(Color.FromArgb(60, 0xFF, 0xFF, 0xFF)), MinWidth = 60, Child = _nvlR2 };
-        _txtR2 = new TextBlock { FontSize = 9, Foreground = DisenadorColores.CrearTextoSecundario(), Text = "R2", VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(4, 0, 0, 0) };
+        _txtR2 = new TextBlock { FontSize = 9, Foreground = DisenadorColores.CrearTextoSecundario(), Text = "R2", VerticalAlignment = VerticalAlignment.Center };
 
-        var filaL2 = new StackPanel { Orientation = Orientation.Horizontal };
-        filaL2.Children.Add(_trkL2);
-        filaL2.Children.Add(_txtL2);
-        var filaR2 = new StackPanel { Orientation = Orientation.Horizontal };
-        filaR2.Children.Add(_trkR2);
-        filaR2.Children.Add(_txtR2);
+        _btnLB = CrearBotonVisual("L1");
+        _btnRB = CrearBotonVisual("R1");
 
-        var filaTriggers = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 4) };
-        filaTriggers.Children.Add(filaL2);
-        filaTriggers.Children.Add(new TextBlock { Text = "  ", FontSize = 8 });
-        filaTriggers.Children.Add(filaR2);
+        _btnY = CrearBotonVisual("\u25B3");
+        _btnB = CrearBotonVisual("\u25CB");
+        _btnA = CrearBotonVisual("\u2715");
+        _btnX = CrearBotonVisual("\u25A1");
 
-        _btnY = CrearBotonVisual("Y");
-        _btnB = CrearBotonVisual("B");
-        _btnA = CrearBotonVisual("A");
-        _btnX = CrearBotonVisual("X");
+        _btnUp = CrearBotonVisual("\u2191");
+        _btnDown = CrearBotonVisual("\u2193");
+        _btnLeft = CrearBotonVisual("\u2190");
+        _btnRight = CrearBotonVisual("\u2192");
 
-        var grdBotones = new Grid { HorizontalAlignment = HorizontalAlignment.Center };
-        grdBotones.ColumnDefinitions.Add(new ColumnDefinition());
-        grdBotones.ColumnDefinitions.Add(new ColumnDefinition());
-        grdBotones.ColumnDefinitions.Add(new ColumnDefinition());
-        grdBotones.RowDefinitions.Add(new RowDefinition());
-        grdBotones.RowDefinitions.Add(new RowDefinition());
-        grdBotones.RowDefinitions.Add(new RowDefinition());
-        Grid.SetRow(_btnY, 0); Grid.SetColumn(_btnY, 1);
-        Grid.SetRow(_btnX, 1); Grid.SetColumn(_btnX, 0);
-        Grid.SetRow(_btnB, 1); Grid.SetColumn(_btnB, 2);
-        Grid.SetRow(_btnA, 2); Grid.SetColumn(_btnA, 1);
-        grdBotones.Children.Add(_btnY);
-        grdBotones.Children.Add(_btnX);
-        grdBotones.Children.Add(_btnB);
-        grdBotones.Children.Add(_btnA);
+        var canvas = new Canvas { Width = 235, Height = 240 };
+
+        Canvas.SetLeft(_btnLB, 40); Canvas.SetTop(_btnLB, 5);
+        canvas.Children.Add(_btnLB);
+        Canvas.SetLeft(_btnRB, 143); Canvas.SetTop(_btnRB, 5);
+        canvas.Children.Add(_btnRB);
+
+        Canvas.SetLeft(_btnUp, 26); Canvas.SetTop(_btnUp, 40);
+        canvas.Children.Add(_btnUp);
+        Canvas.SetLeft(_btnLeft, 4); Canvas.SetTop(_btnLeft, 62);
+        canvas.Children.Add(_btnLeft);
+        Canvas.SetLeft(_btnRight, 48); Canvas.SetTop(_btnRight, 62);
+        canvas.Children.Add(_btnRight);
+        Canvas.SetLeft(_btnDown, 26); Canvas.SetTop(_btnDown, 84);
+        canvas.Children.Add(_btnDown);
+
+        Canvas.SetLeft(_btnY, 167); Canvas.SetTop(_btnY, 40);
+        canvas.Children.Add(_btnY);
+        Canvas.SetLeft(_btnX, 145); Canvas.SetTop(_btnX, 62);
+        canvas.Children.Add(_btnX);
+        Canvas.SetLeft(_btnB, 189); Canvas.SetTop(_btnB, 62);
+        canvas.Children.Add(_btnB);
+        Canvas.SetLeft(_btnA, 167); Canvas.SetTop(_btnA, 84);
+        canvas.Children.Add(_btnA);
+
+        Canvas.SetLeft(_stickIzq, 10); Canvas.SetTop(_stickIzq, 125);
+        canvas.Children.Add(_stickIzq);
+        Canvas.SetLeft(_stickDer, 145); Canvas.SetTop(_stickDer, 125);
+        canvas.Children.Add(_stickDer);
+
+        Canvas.SetLeft(_trkL2, 10); Canvas.SetTop(_trkL2, 200);
+        canvas.Children.Add(_trkL2);
+        Canvas.SetLeft(_txtL2, 23); Canvas.SetTop(_txtL2, 208);
+        canvas.Children.Add(_txtL2);
+        Canvas.SetLeft(_trkR2, 145); Canvas.SetTop(_trkR2, 200);
+        canvas.Children.Add(_trkR2);
+        Canvas.SetLeft(_txtR2, 158); Canvas.SetTop(_txtR2, 208);
+        canvas.Children.Add(_txtR2);
 
         _contenedor.Children.Add(filaTop);
-        _contenedor.Children.Add(filaSticks);
-        _contenedor.Children.Add(filaTriggers);
-        _contenedor.Children.Add(grdBotones);
+        _contenedor.Children.Add(canvas);
     }
 
     private static Border CrearBotonVisual(string texto)
@@ -683,10 +702,13 @@ public class TarjetaMando
         var sw = _stickIzq!.ActualWidth > 0 ? _stickIzq.ActualWidth : 50 * _escala;
         var sh = _stickIzq.ActualHeight > 0 ? _stickIzq.ActualHeight : 50 * _escala;
         var cx = sw / 2; var cy = sh / 2; var radio = (sw / 2 - 7 * _escala);
-        Canvas.SetLeft(_dotIzq!, cx + datos.Lx * radio);
-        Canvas.SetTop(_dotIzq!, cy - datos.Ly * radio);
-        Canvas.SetLeft(_dotDer!, cx + datos.Rx * radio);
-        Canvas.SetTop(_dotDer!, cy - datos.Ry * radio);
+        var halfDot = _dotIzq!.ActualWidth > 0 ? _dotIzq.ActualWidth / 2 : 4 * _escala;
+        var clampX = sw - _dotIzq!.ActualWidth;
+        var clampY = sh - _dotIzq!.ActualHeight;
+        Canvas.SetLeft(_dotIzq!, Math.Clamp(cx + datos.Lx * radio - halfDot, 0, clampX));
+        Canvas.SetTop(_dotIzq!, Math.Clamp(cy + datos.Ly * radio - halfDot, 0, clampY));
+        Canvas.SetLeft(_dotDer!, Math.Clamp(cx + datos.Rx * radio - halfDot, 0, clampX));
+        Canvas.SetTop(_dotDer!, Math.Clamp(cy + datos.Ry * radio - halfDot, 0, clampY));
 
         var wL2 = datos.L2 * 60 * _escala;
         _nvlL2!.Width = wL2;
@@ -700,10 +722,16 @@ public class TarjetaMando
         _nvlR2.Visibility = wR2 > 0 ? Visibility.Visible : Visibility.Collapsed;
         _txtR2!.Text = $"R2 {(int)(datos.R2 * 100)}%";
 
+        AplicarBotonVisual(_btnLB!, datos.BtnLB);
+        AplicarBotonVisual(_btnRB!, datos.BtnRB);
         AplicarBotonVisual(_btnA!, datos.BtnA);
         AplicarBotonVisual(_btnB!, datos.BtnB);
         AplicarBotonVisual(_btnX!, datos.BtnX);
         AplicarBotonVisual(_btnY!, datos.BtnY);
+        AplicarBotonVisual(_btnUp!, datos.BtnUp);
+        AplicarBotonVisual(_btnDown!, datos.BtnDown);
+        AplicarBotonVisual(_btnLeft!, datos.BtnLeft);
+        AplicarBotonVisual(_btnRight!, datos.BtnRight);
     }
 
     private static void AplicarBotonVisual(Border btn, bool presionado)
@@ -1043,8 +1071,15 @@ public class TarjetaMando
     {
         _stickIzq!.Width = _stickIzq.Height = 50 * _escala;
         _stickDer!.Width = _stickDer.Height = 50 * _escala;
+        var stickR = 25 * _escala;
+        _stickIzq.Clip = new EllipseGeometry { Center = new Point(stickR, stickR), RadiusX = stickR, RadiusY = stickR };
+        _stickDer.Clip = new EllipseGeometry { Center = new Point(stickR, stickR), RadiusX = stickR, RadiusY = stickR };
         _dotIzq!.Width = _dotIzq.Height = 8 * _escala;
         _dotDer!.Width = _dotDer.Height = 8 * _escala;
+        Canvas.SetLeft(_dotIzq, 21 * _escala);
+        Canvas.SetTop(_dotIzq, 21 * _escala);
+        Canvas.SetLeft(_dotDer, 21 * _escala);
+        Canvas.SetTop(_dotDer, 21 * _escala);
         _trkL2!.MinWidth = 60 * _escala;
         _trkL2.Height = 6 * _escala;
         _trkR2!.MinWidth = 60 * _escala;
@@ -1055,16 +1090,45 @@ public class TarjetaMando
         _btnB!.Width = _btnB.Height = 22 * _escala;
         _btnX!.Width = _btnX.Height = 22 * _escala;
         _btnY!.Width = _btnY.Height = 22 * _escala;
+        _btnLB!.Width = _btnLB.Height = 22 * _escala;
+        _btnRB!.Width = _btnRB.Height = 22 * _escala;
+        _btnUp!.Width = _btnUp.Height = 22 * _escala;
+        _btnDown!.Width = _btnDown.Height = 22 * _escala;
+        _btnLeft!.Width = _btnLeft.Height = 22 * _escala;
+        _btnRight!.Width = _btnRight.Height = 22 * _escala;
         _txtL2!.FontSize = 9 * _escala;
         _txtR2!.FontSize = 9 * _escala;
 
         if (_titulo != null) _titulo.FontSize = 12 * _escala;
         if (_textoBateria != null) _textoBateria.FontSize = 10 * _escala;
 
-        foreach (var btn in new[] { _btnA, _btnB, _btnX, _btnY })
+        foreach (var btn in new[] { _btnA, _btnB, _btnX, _btnY, _btnLB, _btnRB, _btnUp, _btnDown, _btnLeft, _btnRight })
         {
             if (btn?.Child is TextBlock tb)
                 tb.FontSize = 10 * _escala;
         }
+
+        var s = _escala;
+
+        Canvas.SetLeft(_btnLB!, 40 * s); Canvas.SetTop(_btnLB!, 5 * s);
+        Canvas.SetLeft(_btnRB!, 143 * s); Canvas.SetTop(_btnRB!, 5 * s);
+
+        Canvas.SetLeft(_btnUp!, 26 * s); Canvas.SetTop(_btnUp!, 40 * s);
+        Canvas.SetLeft(_btnLeft!, 4 * s); Canvas.SetTop(_btnLeft!, 62 * s);
+        Canvas.SetLeft(_btnRight!, 48 * s); Canvas.SetTop(_btnRight!, 62 * s);
+        Canvas.SetLeft(_btnDown!, 26 * s); Canvas.SetTop(_btnDown!, 84 * s);
+
+        Canvas.SetLeft(_btnY!, 167 * s); Canvas.SetTop(_btnY!, 40 * s);
+        Canvas.SetLeft(_btnX!, 145 * s); Canvas.SetTop(_btnX!, 62 * s);
+        Canvas.SetLeft(_btnB!, 189 * s); Canvas.SetTop(_btnB!, 62 * s);
+        Canvas.SetLeft(_btnA!, 167 * s); Canvas.SetTop(_btnA!, 84 * s);
+
+        Canvas.SetLeft(_stickIzq!, 10 * s); Canvas.SetTop(_stickIzq!, 125 * s);
+        Canvas.SetLeft(_stickDer!, 145 * s); Canvas.SetTop(_stickDer!, 125 * s);
+
+        Canvas.SetLeft(_trkL2!, 10 * s); Canvas.SetTop(_trkL2!, 200 * s);
+        Canvas.SetLeft(_txtL2!, 23 * s); Canvas.SetTop(_txtL2!, 208 * s);
+        Canvas.SetLeft(_trkR2!, 145 * s); Canvas.SetTop(_trkR2!, 200 * s);
+        Canvas.SetLeft(_txtR2!, 158 * s); Canvas.SetTop(_txtR2!, 208 * s);
     }
 }
