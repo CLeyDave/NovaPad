@@ -13,6 +13,8 @@ log/
 *.log
 
 # Published output
+publish_beta/
+NovaPad-Setup-*.exe
 NovaPad v3.1.3/
 
 # Temp files
