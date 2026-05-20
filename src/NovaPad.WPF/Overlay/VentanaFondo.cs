@@ -160,6 +160,7 @@ public class VentanaFondo : Window, IOverlayService
         catch (Exception ex)
         {
             Log.Error(ex, "[VentanaFondo] InicializarUI failed");
+            return;
         }
         _initialized = true;
         _readyTcs.TrySetResult();
@@ -225,7 +226,11 @@ public class VentanaFondo : Window, IOverlayService
 
     private void AlternarPanel()
     {
-        if (_panelEx == null) return;
+        if (_panelEx == null)
+        {
+            Log.Warning("[VentanaFondo] AlternarPanel: _panelEx es null, no se puede abrir");
+            return;
+        }
         var abierto = _panelEx.Alternar();
         if (abierto)
         {
@@ -399,7 +404,10 @@ public class VentanaFondo : Window, IOverlayService
 
     public void TogglePanel()
     {
-        Dispatcher.Invoke(AlternarPanel);
+        if (Dispatcher.CheckAccess())
+            AlternarPanel();
+        else
+            Dispatcher.Invoke(AlternarPanel);
     }
 
     private void LimpiarTarjetas()

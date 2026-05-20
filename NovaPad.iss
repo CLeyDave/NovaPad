@@ -2,7 +2,7 @@
 ; Requires Inno Setup 6+
 
 #define MyAppName "NovaPad"
-#define MyAppVersion "3.3.8"
+#define MyAppVersion "3.3.9"
 #define MyAppPublisher "CLeyDave"
 #define MyAppURL "https://github.com/CLeyDave/NovaPad"
 #define MyAppExeName "NovaPad.WPF.exe"
@@ -18,7 +18,7 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={userappdata}\NovaPad
 DefaultGroupName=NovaPad
 DisableProgramGroupPage=yes
-OutputDir=C:\Users\USUARIO\AppData\Local\Temp\opencode
+OutputDir=C:\Users\USUARIO\Documents\CODEME\Mando
 OutputBaseFilename=NovaPad-Setup-v{#MyAppVersion}
 Compression=lzma2/max
 SolidCompression=yes
