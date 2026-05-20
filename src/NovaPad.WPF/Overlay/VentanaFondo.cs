@@ -17,7 +17,7 @@ namespace NovaPad.WPF.Overlay;
 
 public class VentanaFondo : Window, IOverlayService
 {
-    private PanelExtendido _panelEx = null!;
+    private VentanaPanel _ventanaPanel = null!;
     private CuadroDepuracion _depu = null!;
     private OrganizadorBurbujas? _avisos;
     private readonly Queue<(string Title, string Message, double Duration)> _pendingAvisos = new();
@@ -110,7 +110,7 @@ public class VentanaFondo : Window, IOverlayService
     private void InicializarUI()
     {
         _depu = new CuadroDepuracion();
-        _panelEx = new PanelExtendido(_acentoHex);
+        _ventanaPanel = new VentanaPanel(_acentoHex);
         _avisos = new OrganizadorBurbujas(_zonaAvisos, _acentoHex);
         _avisos.CambiarEstilo(_estiloAviso, _acentoHex);
 
@@ -124,14 +124,9 @@ public class VentanaFondo : Window, IOverlayService
         }
 
         RecalcularAnclajeAvisos();
-        Canvas.SetLeft(_panelEx.Vista, (Width - 360) / 2);
-        Canvas.SetTop(_panelEx.Vista, (Height - 400) / 2);
-        Canvas.SetLeft(_depu.Vista, 0);
-        Canvas.SetTop(_depu.Vista, 0);
 
         var lienzo = Lienzo;
         lienzo.Children.Add(_zonaAvisos);
-        lienzo.Children.Add(_panelEx.Vista);
         lienzo.Children.Add(_depu.Vista);
 
         _tickDepu.Interval = TimeSpan.FromSeconds(1);
@@ -179,7 +174,7 @@ public class VentanaFondo : Window, IOverlayService
         Lienzo.Children.Clear();
         _tarjetasPorId.Clear();
         _depu = null!;
-        _panelEx = null!;
+        _ventanaPanel = null!;
         _avisos = null;
         _readyTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         _initialized = false;
@@ -226,17 +221,12 @@ public class VentanaFondo : Window, IOverlayService
 
     private void AlternarPanel()
     {
-        if (_panelEx == null)
+        if (_ventanaPanel == null)
         {
-            Log.Warning("[VentanaFondo] AlternarPanel: _panelEx es null, no se puede abrir");
+            Log.Warning("[VentanaFondo] _ventanaPanel es null, no se puede abrir");
             return;
         }
-        var abierto = _panelEx.Alternar();
-        if (abierto)
-        {
-            Canvas.SetLeft(_panelEx.Vista, (Width - 360) / 2);
-            Canvas.SetTop(_panelEx.Vista, (Height - 400) / 2);
-        }
+        _ventanaPanel.Alternar();
     }
 
     protected override void OnClosed(EventArgs e)
@@ -244,7 +234,7 @@ public class VentanaFondo : Window, IOverlayService
         var helper = new WindowInteropHelper(this);
         try { UnregisterHotKey(helper.Handle, IdHotkey); } catch { }
         try { UnregisterHotKey(helper.Handle, IdHotkeyUpdate); } catch { }
-        _panelEx?.Detener();
+        _ventanaPanel?.Panel.Detener();
         _tickDepu.Stop();
         Log.Information("[VentanaFondo] Ventana cerrada");
         base.OnClosed(e);
@@ -252,7 +242,7 @@ public class VentanaFondo : Window, IOverlayService
 
     protected override void OnKeyDown(KeyEventArgs e)
     {
-        if (e.Key == Key.Escape && _panelEx != null && _panelEx.Vista.Visibility == Visibility.Visible)
+        if (e.Key == Key.Escape && _ventanaPanel != null && _ventanaPanel.IsVisible)
         {
             AlternarPanel();
             e.Handled = true;
@@ -296,7 +286,7 @@ public class VentanaFondo : Window, IOverlayService
             _avisos?.CambiarEstilo(_estiloAviso, _acentoHex);
         }
 
-        _panelEx?.CambiarAcento(_acentoHex, cfg.ColorFondo);
+        _ventanaPanel?.Panel.CambiarAcento(_acentoHex, cfg.ColorFondo);
 
         if (Enum.TryParse<EstiloTarjeta>(cfg.EstiloTarjeta, true, out var parsedEstilo))
         {
@@ -453,8 +443,7 @@ public class VentanaFondo : Window, IOverlayService
         }
 
         ReposicionarTarjetas();
-        if (_panelEx != null)
-            _panelEx.Actualizar(inf.Lista);
+        _ventanaPanel?.Panel.Actualizar(inf.Lista);
     }
 
     private void RecalcularAnclajeAvisos()
@@ -576,13 +565,12 @@ public class VentanaFondo : Window, IOverlayService
     {
         var helper = new WindowInteropHelper(this);
         try { UnregisterHotKey(helper.Handle, IdHotkey); } catch { }
-        _panelEx?.Detener();
+        _ventanaPanel?.Panel.Detener();
         _tickDepu.Stop();
         Log.Information("[VentanaFondo] Ventana cerrada");
         base.OnClosing(e);
     }
 }
-
 
 
 

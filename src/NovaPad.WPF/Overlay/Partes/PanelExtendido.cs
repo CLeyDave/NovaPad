@@ -166,7 +166,7 @@ public class PanelExtendido
         return _visible;
     }
 
-    private void Mostrar()
+    public void Mostrar()
     {
         _marco.Visibility = Visibility.Visible;
         _marco.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(250)));
@@ -174,7 +174,7 @@ public class PanelExtendido
         _marco.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(0.9, 1.0, TimeSpan.FromMilliseconds(250)));
     }
 
-    private void Ocultar()
+    public void Ocultar()
     {
         var anim = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(200));
         anim.Completed += (_, _) => _marco.Visibility = Visibility.Collapsed;
