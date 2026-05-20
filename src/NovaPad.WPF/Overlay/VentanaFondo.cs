@@ -75,6 +75,8 @@ public class VentanaFondo : Window, IOverlayService
     private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
 
+    private bool _isTogglingPanel;
+
     private const int GWL_EXSTYLE = -20;
     private const int WS_EX_TRANSPARENT = 0x00000020;
     private const int WS_EX_TOOLWINDOW = 0x00000080;
@@ -221,12 +223,15 @@ public class VentanaFondo : Window, IOverlayService
 
     private void AlternarPanel()
     {
+        if (_isTogglingPanel) return;
         if (_ventanaPanel == null)
         {
             Log.Warning("[VentanaFondo] _ventanaPanel es null, no se puede abrir");
             return;
         }
-        _ventanaPanel.Alternar();
+        _isTogglingPanel = true;
+        try { _ventanaPanel.Alternar(); }
+        finally { _isTogglingPanel = false; }
     }
 
     protected override void OnClosed(EventArgs e)
