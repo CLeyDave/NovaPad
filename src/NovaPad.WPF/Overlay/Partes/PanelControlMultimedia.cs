@@ -382,20 +382,17 @@ public class PanelControlMultimedia
 
     private void EnviarPlayPause()
     {
-        if (_sesion != null)
-            EnviarTeclaMedia(VK_MEDIA_PLAY_PAUSE);
+        EnviarTeclaMedia(VK_MEDIA_PLAY_PAUSE);
     }
 
     private void EnviarAnterior()
     {
-        if (_sesion != null)
-            EnviarTeclaMedia(VK_MEDIA_PREV_TRACK);
+        EnviarTeclaMedia(VK_MEDIA_PREV_TRACK);
     }
 
     private void EnviarSiguiente()
     {
-        if (_sesion != null)
-            EnviarTeclaMedia(VK_MEDIA_NEXT_TRACK);
+        EnviarTeclaMedia(VK_MEDIA_NEXT_TRACK);
     }
 
     public void CambiarAcento(string hexAcento)
