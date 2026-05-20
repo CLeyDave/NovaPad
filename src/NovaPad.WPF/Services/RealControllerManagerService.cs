@@ -155,9 +155,6 @@ public class RealControllerManagerService : IControllerManagerService
 
                     state.Guide = raw != null ? LeerGuideDesdeRaw(raw) : false;
 
-                    if (state.Guide && (state.LeftStickClick || state.RightStickClick))
-                        state.Guide = false;
-
                     _states[id] = state;
                     InputReceived?.Invoke(this, state);
                 }
@@ -187,9 +184,15 @@ public class RealControllerManagerService : IControllerManagerService
 
             if (guideIdx >= 0) return btns[guideIdx];
 
-            if (raw.ButtonCount > 10 && btns[10]) return true;
-
-            if (raw.ButtonCount > 14 && btns[14]) return true;
+            for (int i = raw.ButtonCount - 1; i >= 10; i--)
+            {
+                if (btns[i])
+                {
+                    if (btns.Length > 8 && (btns[8] || btns[9]))
+                        return false;
+                    return true;
+                }
+            }
 
             return false;
         }
