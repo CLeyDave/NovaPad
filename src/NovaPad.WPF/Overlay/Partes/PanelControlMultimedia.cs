@@ -147,7 +147,12 @@ public class PanelControlMultimedia
         };
 
         _timerProgreso = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
-        _timerProgreso.Tick += (_, _) => _ = ActualizarProgreso();
+        _timerProgreso.Tick += (_, _) =>
+        {
+            _ = ActualizarInfoPista();
+            _ = ActualizarInfoReproduccion();
+            _ = ActualizarProgreso();
+        };
 
         _ = IniciarAsync();
     }
