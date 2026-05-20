@@ -155,6 +155,9 @@ public class RealControllerManagerService : IControllerManagerService
 
                     state.Guide = raw != null ? LeerGuideDesdeRaw(raw) : false;
 
+                    if (state.Guide && (state.LeftStickClick || state.RightStickClick))
+                        state.Guide = false;
+
                     _states[id] = state;
                     InputReceived?.Invoke(this, state);
                 }

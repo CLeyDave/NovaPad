@@ -153,6 +153,7 @@ public class PanelControlMultimedia
             _ = ActualizarInfoReproduccion();
             _ = ActualizarProgreso();
         };
+        _timerProgreso.Start();
 
         _ = IniciarAsync();
     }
@@ -234,7 +235,6 @@ public class PanelControlMultimedia
         _ = ActualizarInfoPista();
         _ = ActualizarInfoReproduccion();
         _ = ActualizarProgreso();
-        _timerProgreso.Start();
     }
 
     private async void SesionOnMediaPropertiesChanged(GlobalSystemMediaTransportControlsSession sender, MediaPropertiesChangedEventArgs args)
