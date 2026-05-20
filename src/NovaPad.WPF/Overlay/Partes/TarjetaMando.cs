@@ -709,6 +709,8 @@ public class TarjetaMando
         Canvas.SetTop(_dotIzq!, Math.Clamp(cy + datos.Ly * radio - halfDot, 0, clampY));
         Canvas.SetLeft(_dotDer!, Math.Clamp(cx + datos.Rx * radio - halfDot, 0, clampX));
         Canvas.SetTop(_dotDer!, Math.Clamp(cy + datos.Ry * radio - halfDot, 0, clampY));
+        _dotIzq.Background = datos.BtnL3 ? new SolidColorBrush(Colors.White) : DisenadorColores.CrearAcento(_acentoHex);
+        _dotDer.Background = datos.BtnR3 ? new SolidColorBrush(Colors.White) : DisenadorColores.CrearAcento(_acentoHex);
 
         var wL2 = datos.L2 * 60 * _escala;
         _nvlL2!.Width = wL2;

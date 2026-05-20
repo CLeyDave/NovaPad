@@ -184,8 +184,9 @@ public class RealControllerManagerService : IControllerManagerService
 
             if (guideIdx >= 0) return btns[guideIdx];
 
-            for (int i = raw.ButtonCount - 1; i >= 10; i--)
-                if (btns[i]) return true;
+            if (raw.ButtonCount > 10 && btns[10]) return true;
+
+            if (raw.ButtonCount > 14 && btns[14]) return true;
 
             return false;
         }

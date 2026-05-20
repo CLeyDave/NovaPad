@@ -29,6 +29,8 @@ public class InfoMando
     public bool BtnRight { get; set; }
     public bool BtnLB { get; set; }
     public bool BtnRB { get; set; }
+    public bool BtnL3 { get; set; }
+    public bool BtnR3 { get; set; }
 }
 
 public class InformeMandos

@@ -620,7 +620,9 @@ public partial class AdminOverlayVm : ObservableObject
                         BtnLeft = state?.DPadLeft ?? false,
                         BtnRight = state?.DPadRight ?? false,
                         BtnLB = state?.LeftBumper ?? false,
-                        BtnRB = state?.RightBumper ?? false
+                        BtnRB = state?.RightBumper ?? false,
+                        BtnL3 = state?.LeftStickClick ?? false,
+                        BtnR3 = state?.RightStickClick ?? false
                     };
                 }).ToList();
             Log.Information("[Overlay] PushHud: Sending {Count} controllers", list.Count);
