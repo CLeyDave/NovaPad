@@ -113,7 +113,9 @@ public class PanelControlMultimedia
 
         _btnAnterior = CrearBotonControl("\u23EE");
         _btnAnterior.Click += (_, _) => EnviarAnterior();
+        _btnPlayPause = CrearBotonControl("\u25B6");
         _btnPlayPause.Click += (_, _) => EnviarPlayPause();
+        _btnSiguiente = CrearBotonControl("\u23ED");
         _btnSiguiente.Click += (_, _) => EnviarSiguiente();
 
         var filaControles = new StackPanel
